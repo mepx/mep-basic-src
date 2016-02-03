@@ -21,6 +21,6 @@ There are 4 datasets in this repository (check data folder):
 
 building1.txt - this is a symbolic regression problem taken from PROBEN1. mep.cpp, mep_multiple_pop.cpp and mep_threads.cpp are the programs that use it for training.
 
-cancer1.txt - this is a symbolic classification problem taken from PROBEN1. mep.cpp, mep_multiple_pop.cpp and mep_threads.cpp are the programs that use it for training.
+cancer1.txt - this is a classification problem taken from PROBEN1. mep.cpp, mep_multiple_pop.cpp and mep_threads.cpp are the programs that use it for training.
 
 2x2_multiplier.txt, 3x3_multiplier.txt - this is a problem of designing digital circuits (for 2x2 and 3x3 multiplication). mep_circuits.cpp use them for training.
