@@ -1,12 +1,18 @@
 //---------------------------------------------------------------------------
 //   Multi Expression Programming Software - with multiple subpopulations
+//   Copyright (C), Mihai Oltean (mihai.oltean@gmail.com)
+//   Version 2016.02.03
+
+//   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+//   The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+//   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//---------------------------------------------------------------------------
 //   The subpopulations have a circular structure
 //   From each subpopulation we move some individuals in the next one
 
-//   I recommend to check the simple variant first (without subpopulations)
-
-//   Copyright (C) 2002-2015, Mihai Oltean 
-//   Version 2015.08.14
+//   I recommend to check the basic variant first (without subpopulations)
 
 //   Compiled with Microsoft Visual C++ 2013
 //   Also compiled with XCode 5.
@@ -14,13 +20,7 @@
 //   how to use it: 
 //   just create a console project and copy-paste the content this file in the main file of the project
 
-//   This program is a free software for educational and research purposes.
-//   It may be redistributed and/or modified but it may NOT be sold.
-//	 It CANNOT be used in commercial applications without our written consent.
-
-//   This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
-
-//   New versions of this program will be available at:  www.mep.cs.ubbcluj.ro
+//   More info at:  www.mep.cs.ubbcluj.ro
 
 //   Please reports any sugestions and/or bugs to:     mihai.oltean@gmail.com
 
