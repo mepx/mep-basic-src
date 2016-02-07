@@ -508,7 +508,7 @@ void evolve_one_subpopulation(chromosome * a_sub_population, parameters &params,
 void start_steady_state_mep(parameters &params, double **training_data, double* target, int num_training_data, int num_variables)       // Steady-State 
 {
 	// a steady state model - 
-	// we work with one population only and the newly created inviduals replace the worst ones (if the offspring are better).
+	// Newly created inviduals replace the worst ones (if the offspring are better) in the same (sub) population.
 
 	// allocate memory
 	chromosome **sub_populations; // an array of sub populations
