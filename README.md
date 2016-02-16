@@ -24,3 +24,15 @@ building1.txt - this is a symbolic regression problem taken from PROBEN1. mep.cp
 cancer1.txt - this is a classification problem taken from PROBEN1. mep.cpp, mep_multiple_pop.cpp and mep_threads.cpp are the programs that use it for training.
 
 2x2_multiplier.txt, 3x3_multiplier.txt - this is a problem of designing digital circuits (for 2x2 and 3x3 multiplication). mep_circuits.cpp use them for training.
+
+#More info:
+
+http://www.mep.cs.ubbcluj.ro
+
+#Discussion Group:
+
+https://groups.google.com/d/forum/mepx
+
+#Contact author:
+
+mihai.oltean@gmail.com
