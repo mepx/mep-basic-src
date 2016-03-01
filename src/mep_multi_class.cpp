@@ -49,6 +49,9 @@
 
 char operators_string[5] = "+-*/";
 
+#define PROBLEM_TYPE_REGRESSION 0
+#define PROBLEM_TYPE_CLASSIFICATION 1
+
 //---------------------------------------------------------------------------
 struct code3{
 	int op;				// either a variable, operator or constant; 
@@ -508,7 +511,9 @@ void print_chromosome(chromosome& a, parameters &params, int num_variables)
 			else
 				printf("%d: constants[%d]\n", i, a.prg[i].op - num_variables);
 
-	printf("best index = %d\n", a.best_index);
+	if (params.problem_type == PROBLEM_TYPE_REGRESSION)
+	  printf("best index = %d\n", a.best_index);
+
 	printf("Fitness = %lf\n", a.fitness);
 }
 //---------------------------------------------------------------------------
@@ -545,7 +550,7 @@ void start_steady_state_mep(parameters &params, double **training_data, double* 
 	// initialize
 	for (int i = 0; i < params.pop_size; i++) {
 		generate_random_chromosome(population[i], params, num_variables);
-		if (params.problem_type == 0)
+		if (params.problem_type == PROBLEM_TYPE_REGRESSION)
 			fitness_regression(population[i], params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
 		else
 			fitness_classification(population[i], params.code_length, num_variables, params.num_classes, num_training_data, training_data, target, eval_matrix);
@@ -571,13 +576,13 @@ void start_steady_state_mep(parameters &params, double **training_data, double* 
 			}
 			// mutate the result and compute fitness
 			mutation(offspring1, params, num_variables);
-			if (params.problem_type == 0)
+			if (params.problem_type == PROBLEM_TYPE_REGRESSION)
 				fitness_regression(offspring1, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
 			else
 				fitness_classification(offspring1, params.code_length, num_variables, params.num_classes, num_training_data, training_data, target, eval_matrix);
 			// mutate the other offspring and compute fitness
 			mutation(offspring2, params, num_variables);
-			if (params.problem_type == 0)
+			if (params.problem_type == PROBLEM_TYPE_REGRESSION)
 				fitness_regression(offspring2, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
 			else
 				fitness_classification(offspring2, params.code_length, num_variables, params.num_classes, num_training_data, training_data, target, eval_matrix);
@@ -614,7 +619,7 @@ int main(void)
 {
 	parameters params;
 
-	params.pop_size = 500;						    // the number of individuals in population  (must be an even number!)
+	params.pop_size = 2000;						    // the number of individuals in population  (must be an even number!)
 	params.code_length = 100;
 	params.num_generations = 1000;					// the number of generations
 	params.mutation_probability = 0.01;              // mutation probability
@@ -628,28 +633,28 @@ int main(void)
 	params.constants_min = -1;
 	params.constants_max = 1;
 
-	params.problem_type = 1;    //0 - regression, 1 - classification; DONT FORGET TO SET IT
+	params.problem_type = PROBLEM_TYPE_CLASSIFICATION;    //0 - regression, 1 - classification; DONT FORGET TO SET IT
 	params.num_classes = 3;     // MUST specify the number of classes
 
 	int num_training_data, num_variables;
 	double** training_data, *target;
 	char error_msg[1000];
 	error_msg[0] = 0;
-	/*
+	
 	// format used by gene1.dt file
 	if (!read_training_data_from_proben1_format("datasets\\gene1.dt", ' ', params.num_classes, training_data, target, num_training_data, num_variables, error_msg)) {
 		printf(error_msg);
 		getchar();
 		return 1;
 	}
-	*/
+	/*
 	// format used by cancer1.txt and iris.txt and building1.txt files
 	if (!read_training_data("datasets\\iris.txt", ' ', training_data, target, num_training_data, num_variables, error_msg)) {
 		printf(error_msg);
 		getchar();
 		return 1;
 	}
-
+	*/
 	srand(0);
 	start_steady_state_mep(params, training_data, target, num_training_data, num_variables);
 
