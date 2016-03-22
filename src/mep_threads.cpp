@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 //   Multi Expression Programming Software - with multiple subpopulations and threads
 //   Copyright Mihai Oltean  (mihai.oltean@gmail.com)
-//   Version 2016.02.03
+//   Version 2016.03.22
 
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -86,8 +86,8 @@ struct parameters{
 	double constants_min, constants_max;   // the array for constants
 	double variables_probability, operators_probability, constants_probability;
 
-	int problem_type; //0 - regression, 1 - classification
-	double classification_threshold; // for classification problems only
+	int problem_type; //0 - regression, 1 - binary classification
+	double classification_threshold; // for binary classification problems only
 
 	int num_threads; // num threads. 
 	//for best performances the number of subpopulations should be multiple of num_threads.
@@ -322,7 +322,7 @@ void fitness_regression(chromosome &c, int code_length, int num_variables, int n
 	}
 }
 //---------------------------------------------------------------------------
-void fitness_classification(chromosome &c, int code_length, int num_variables, int num_training_data, double **training_data, double *target, double **eval_matrix)
+void fitness_binary_classification(chromosome &c, int code_length, int num_variables, int num_training_data, double **training_data, double *target, double **eval_matrix)
 {
 	c.fitness = 1e+308;
 	c.best_instruction_index = -1;
@@ -493,66 +493,67 @@ void evolve_one_subpopulation(int *current_subpop_index, std::mutex* mutex, chro
 		mutex->unlock();
 
 		// pop_index is the index of the subpopulation evolved by the current thread
+		if (pop_index < params.num_sub_populations) {
+			chromosome *a_sub_population = sub_populations[pop_index];
 
-		chromosome *a_sub_population = sub_populations[pop_index];
+			chromosome offspring1, offspring2;
+			allocate_chromosome(offspring1, params);
+			allocate_chromosome(offspring2, params);
 
-		chromosome offspring1, offspring2;
-		allocate_chromosome(offspring1, params);
-		allocate_chromosome(offspring2, params);
+			if (generation_index == 0) {
+				for (int i = 0; i < params.sub_population_size; i++) {
+					generate_random_chromosome(a_sub_population[i], params, num_variables);
+					if (params.problem_type == 0)
+						fitness_regression(a_sub_population[i], params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
+					else
+						fitness_binary_classification(a_sub_population[i], params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
 
-		if (generation_index == 0) {
-			for (int i = 0; i < params.sub_population_size; i++) {
-				generate_random_chromosome(a_sub_population[i], params, num_variables);
-				if (params.problem_type == 0)
-					fitness_regression(a_sub_population[i], params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
-				else
-					fitness_classification(a_sub_population[i], params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
-
+				}
+				// sort ascendingly by fitness inside this population
+				qsort((void *)a_sub_population, params.sub_population_size, sizeof(a_sub_population[0]), sort_function);
 			}
-			// sort ascendingly by fitness inside this population
-			qsort((void *)a_sub_population, params.sub_population_size, sizeof(a_sub_population[0]), sort_function);
+			else // next generations
+				for (int k = 0; k < params.sub_population_size; k += 2) {
+					// we increase by 2 because at each step we create 2 offspring
+
+					// choose the parents using binary tournament
+					int r1 = tournament_selection(a_sub_population, params.sub_population_size, 2);
+					int r2 = tournament_selection(a_sub_population, params.sub_population_size, 2);
+					// crossover
+					double p_0_1 = rand() / double(RAND_MAX); // a random number between 0 and 1
+					if (p_0_1 < params.crossover_probability)
+						one_cut_point_crossover(a_sub_population[r1], a_sub_population[r2], params, offspring1, offspring2);
+					else {// no crossover so the offspring are a copy of the parents
+						copy_individual(offspring1, a_sub_population[r1], params);
+						copy_individual(offspring2, a_sub_population[r2], params);
+					}
+					// mutate the result and compute fitness
+					mutation(offspring1, params, num_variables);
+					if (params.problem_type == 0)
+						fitness_regression(offspring1, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
+					else
+						fitness_binary_classification(offspring1, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
+					// mutate the other offspring too
+					mutation(offspring2, params, num_variables);
+					if (params.problem_type == 0)
+						fitness_regression(offspring2, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
+					else
+						fitness_binary_classification(offspring2, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
+
+					// replace the worst in the population
+					if (offspring1.fitness < a_sub_population[params.sub_population_size - 1].fitness) {
+						copy_individual(a_sub_population[params.sub_population_size - 1], offspring1, params);
+						qsort((void *)a_sub_population, params.sub_population_size, sizeof(a_sub_population[0]), sort_function);
+					}
+					if (offspring2.fitness < a_sub_population[params.sub_population_size - 1].fitness) {
+						copy_individual(a_sub_population[params.sub_population_size - 1], offspring2, params);
+						qsort((void *)a_sub_population, params.sub_population_size, sizeof(a_sub_population[0]), sort_function);
+					}
+				}
+
+			delete_chromosome(offspring1);
+			delete_chromosome(offspring2);
 		}
-		else // next generations
-			for (int k = 0; k < params.sub_population_size; k += 2) {
-				// we increase by 2 because at each step we create 2 offspring
-
-				// choose the parents using binary tournament
-				int r1 = tournament_selection(a_sub_population, params.sub_population_size, 2);
-				int r2 = tournament_selection(a_sub_population, params.sub_population_size, 2);
-				// crossover
-				double p_0_1 = rand() / double(RAND_MAX); // a random number between 0 and 1
-				if (p_0_1 < params.crossover_probability)
-					one_cut_point_crossover(a_sub_population[r1], a_sub_population[r2], params, offspring1, offspring2);
-				else {// no crossover so the offspring are a copy of the parents
-					copy_individual(offspring1, a_sub_population[r1], params);
-					copy_individual(offspring2, a_sub_population[r2], params);
-				}
-				// mutate the result and compute fitness
-				mutation(offspring1, params, num_variables);
-				if (params.problem_type == 0)
-					fitness_regression(offspring1, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
-				else
-					fitness_classification(offspring1, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
-				// mutate the other offspring too
-				mutation(offspring2, params, num_variables);
-				if (params.problem_type == 0)
-					fitness_regression(offspring2, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
-				else
-					fitness_classification(offspring2, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
-
-				// replace the worst in the population
-				if (offspring1.fitness < a_sub_population[params.sub_population_size - 1].fitness) {
-					copy_individual(a_sub_population[params.sub_population_size - 1], offspring1, params);
-					qsort((void *)a_sub_population, params.sub_population_size, sizeof(a_sub_population[0]), sort_function);
-				}
-				if (offspring2.fitness < a_sub_population[params.sub_population_size - 1].fitness) {
-					copy_individual(a_sub_population[params.sub_population_size - 1], offspring2, params);
-					qsort((void *)a_sub_population, params.sub_population_size, sizeof(a_sub_population[0]), sort_function);
-				}
-			}
-
-		delete_chromosome(offspring1);
-		delete_chromosome(offspring2);
 	}
 }
 //---------------------------------------------------------------------------
@@ -670,8 +671,8 @@ int main(void)
 	params.constants_min = -1;
 	params.constants_max = 1;
 
-	params.problem_type = 0;             //0 - regression, 1 - classification; DON'T FORGET TO SET IT
-	params.classification_threshold = 0; // only for classification problems
+	params.problem_type = 0;             //0 - regression, 1 - binary classification; DON'T FORGET TO SET IT
+	params.classification_threshold = 0; // only for binary classification problems
 
 	params.num_threads = 4;
 
