@@ -513,6 +513,7 @@ void print_chromosome(chromosome& a, parameters &params, int num_variables)
 
 	if (params.problem_type == PROBLEM_TYPE_REGRESSION)
 	  printf("best index = %d\n", a.best_index);
+	// for classification problems we don't have the best index.
 
 	printf("Fitness = %lf\n", a.fitness);
 }
