@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
-//   Multi Expression Programming - basic source code
-//   Copyright Mihai Oltean  (mihai.oltean@gmail.com)
-//   Version 2016.02.03
+//   Multi Expression Programming - basic source code for solving symbolic regression and binary classification problems
+//   (c) Mihai Oltean  www.tcreate.org ; mihai.oltean@gmail.com
+//   Last update on: 2016.05.22
 
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -10,12 +10,15 @@
 //   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //---------------------------------------------------------------------------
 
-//   More info at:  www.mep.cs.ubbcluj.ro
+//   More info at:  
+//     www.mepx.org
+//     www.mep.cs.ubbcluj.ro
+//     www.github.com/mepx
 
 //   Compiled with Microsoft Visual C++ 2013
 //   Also compiled with XCode 5.
 
-//   Please reports any sugestions and/or bugs to       mihai.oltean@gmail.com
+//   Please reports any sugestions and/or bugs to mihai.oltean@gmail.com
 
 //   Training data file must have the following format (see building1.txt and cancer1.txt):
 //   building1 and cancer1 data were taken from PROBEN1
@@ -27,6 +30,8 @@
 
 //   where m is the number of training data
 //   and n is the number of variables.
+//   xij are the inputs
+//   fi are the outputs
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,25 +48,25 @@
 char operators_string[5] = "+-*/";
 
 //---------------------------------------------------------------------------
-struct code3{
+struct t_code3{
 	int op;				// either a variable, operator or constant; 
 	// variables are indexed from 0: 0,1,2,...; 
 	// constants are indexed from num_variables
 	// operators are -1, -2, -3...
-	int adr1, adr2;    // pointers to arguments
+	int addr1, addr2;    // pointers to arguments
 };
 //---------------------------------------------------------------------------
-struct chromosome{
-	code3 *prg;        // the program - a string of genes
-	double *constants; // an array of constants
+struct t_mep_chromosome{
+	t_code3 *prg;        // the program - a string of genes
+	double *constants;   // an array of constants
 
 	double fitness;        // the fitness (or the error)
 	// for regression is computed as sum of abs differences between target and obtained
-	// for classification is computed as the number of incorrectly classified data
+	// for binary classification is computed as the number of incorrectly classified data
 	int best_index;        // the index of the best expression in chromosome
 };
 //---------------------------------------------------------------------------
-struct parameters{
+struct t_mep_parameters{
 	int code_length;             // number of instructions in a chromosome
 	int num_generations;
 	int pop_size;                // population size
@@ -74,16 +79,16 @@ struct parameters{
 	double classification_threshold; // for classification problems only
 };
 //---------------------------------------------------------------------------
-void allocate_chromosome(chromosome &c, parameters &params)
+void allocate_chromosome(t_mep_chromosome &c, t_mep_parameters &params)
 {
-	c.prg = new code3[params.code_length];
+	c.prg = new t_code3[params.code_length];
 	if (params.num_constants)
 		c.constants = new double[params.num_constants];
 	else
 		c.constants = NULL;
 }
 //---------------------------------------------------------------------------
-void delete_chromosome(chromosome &c)
+void delete_chromosome(t_mep_chromosome &c)
 {
 	if (c.prg) {
 		delete[] c.prg;
@@ -182,7 +187,7 @@ void delete_data(double **&data, double *&target, int num_training_data)
 	delete[] target;
 }
 //---------------------------------------------------------------------------
-void copy_individual(chromosome& dest, const chromosome& source, parameters &params)
+void copy_individual(t_mep_chromosome& dest, const t_mep_chromosome& source, t_mep_parameters &params)
 {
 	for (int i = 0; i < params.code_length; i++)
 		dest.prg[i] = source.prg[i];
@@ -192,7 +197,7 @@ void copy_individual(chromosome& dest, const chromosome& source, parameters &par
 	dest.best_index = source.best_index;
 }
 //---------------------------------------------------------------------------
-void generate_random_chromosome(chromosome &a, parameters &params, int num_variables) // randomly initializes the individuals
+void generate_random_chromosome(t_mep_chromosome &a, t_mep_parameters &params, int num_variables) // randomly initializes the individuals
 {
 	// generate constants first
 	for (int c = 0; c < params.num_constants; c++)
@@ -219,12 +224,12 @@ void generate_random_chromosome(chromosome &a, parameters &params, int num_varia
 			else
 				a.prg[i].op = num_variables + rand() % params.num_constants; // index of a constant
 
-		a.prg[i].adr1 = rand() % i;
-		a.prg[i].adr2 = rand() % i;
+		a.prg[i].addr1 = rand() % i;
+		a.prg[i].addr2 = rand() % i;
 	}
 }
 //---------------------------------------------------------------------------
-void compute_eval_matrix(chromosome &c, int code_length, int num_variables, int num_training_data, double **training_data, double *target, double **eval_matrix)
+void compute_eval_matrix(t_mep_chromosome &c, int code_length, int num_variables, int num_training_data, double **training_data, double *target, double **eval_matrix)
 {
 	// we keep intermediate values in a matrix because when an error occurs (like division by 0) we mutate that gene into a variables.
 	// in such case it is faster to have all intermediate results until current gene, so that we don't have to recompute them again.
@@ -239,20 +244,20 @@ void compute_eval_matrix(chromosome &c, int code_length, int num_variables, int 
 
 		case  -1:  // +
 			for (int k = 0; k < num_training_data; k++)
-				eval_matrix[i][k] = eval_matrix[c.prg[i].adr1][k] + eval_matrix[c.prg[i].adr2][k];
+				eval_matrix[i][k] = eval_matrix[c.prg[i].addr1][k] + eval_matrix[c.prg[i].addr2][k];
 			break;
 		case  -2:  // -
 			for (int k = 0; k < num_training_data; k++)
-				eval_matrix[i][k] = eval_matrix[c.prg[i].adr1][k] - eval_matrix[c.prg[i].adr2][k];
+				eval_matrix[i][k] = eval_matrix[c.prg[i].addr1][k] - eval_matrix[c.prg[i].addr2][k];
 
 			break;
 		case  -3:  // *
 			for (int k = 0; k < num_training_data; k++)
-				eval_matrix[i][k] = eval_matrix[c.prg[i].adr1][k] * eval_matrix[c.prg[i].adr2][k];
+				eval_matrix[i][k] = eval_matrix[c.prg[i].addr1][k] * eval_matrix[c.prg[i].addr2][k];
 			break;
 		case  -4:  //  /
 			for (int k = 0; k < num_training_data; k++)
-				if (fabs(eval_matrix[c.prg[i].adr2][k]) < 1e-6) // a small constant
+				if (fabs(eval_matrix[c.prg[i].addr2][k]) < 1e-6) // a small constant
 					is_error_case = true;
 			if (is_error_case) {                                           // an division by zero error occured !!!
 				c.prg[i].op = rand() % num_variables;   // the gene is mutated into a terminal
@@ -261,7 +266,7 @@ void compute_eval_matrix(chromosome &c, int code_length, int num_variables, int 
 			}
 			else    // normal execution....
 				for (int k = 0; k < num_training_data; k++)
-					eval_matrix[i][k] = eval_matrix[c.prg[i].adr1][k] / eval_matrix[c.prg[i].adr2][k];
+					eval_matrix[i][k] = eval_matrix[c.prg[i].addr1][k] / eval_matrix[c.prg[i].addr2][k];
 			break;
 		default:  // a variable
 			for (int k = 0; k < num_training_data; k++)
@@ -274,8 +279,7 @@ void compute_eval_matrix(chromosome &c, int code_length, int num_variables, int 
 	}
 }
 //---------------------------------------------------------------------------
-// evaluate Individual
-void fitness_regression(chromosome &c, int code_length, int num_variables, int num_training_data, double **training_data, double *target, double **eval_matrix)
+void fitness_regression(t_mep_chromosome &c, int code_length, int num_variables, int num_training_data, double **training_data, double *target, double **eval_matrix)
 {
 	c.fitness = 1e+308;
 	c.best_index = -1;
@@ -294,7 +298,7 @@ void fitness_regression(chromosome &c, int code_length, int num_variables, int n
 	}
 }
 //---------------------------------------------------------------------------
-void fitness_classification(chromosome &c, int code_length, int num_variables, int num_training_data, double **training_data, double *target, double **eval_matrix)
+void fitness_classification(t_mep_chromosome &c, int code_length, int num_variables, int num_training_data, double **training_data, double *target, double **eval_matrix)
 {
 	c.fitness = 1e+308;
 	c.best_index = -1;
@@ -316,7 +320,7 @@ void fitness_classification(chromosome &c, int code_length, int num_variables, i
 	}
 }
 //---------------------------------------------------------------------------
-void mutation(chromosome &a_chromosome, parameters params, int num_variables) // mutate the individual
+void mutation(t_mep_chromosome &a_chromosome, t_mep_parameters params, int num_variables) // mutate the individual
 {
 	// mutate each symbol with the given probability
 	// first gene must be a variable or constant
@@ -346,13 +350,13 @@ void mutation(chromosome &a_chromosome, parameters params, int num_variables) //
 					a_chromosome.prg[i].op = num_variables + rand() % params.num_constants; // index of a constant
 		}
 
-		p = rand() / (double)RAND_MAX;      // mutate the first address  (adr1)
+		p = rand() / (double)RAND_MAX;      // mutate the first address  (addr1)
 		if (p < params.mutation_probability)
-			a_chromosome.prg[i].adr1 = rand() % i;
+			a_chromosome.prg[i].addr1 = rand() % i;
 
-		p = rand() / (double)RAND_MAX;      // mutate the second address   (adr2)
+		p = rand() / (double)RAND_MAX;      // mutate the second address   (addr2)
 		if (p < params.mutation_probability)
-			a_chromosome.prg[i].adr2 = rand() % i;
+			a_chromosome.prg[i].addr2 = rand() % i;
 	}
 	// mutate the constants
 	for (int c = 0; c < params.num_constants; c++) {
@@ -363,7 +367,7 @@ void mutation(chromosome &a_chromosome, parameters params, int num_variables) //
 
 }
 //---------------------------------------------------------------------------
-void one_cut_point_crossover(const chromosome &parent1, const chromosome &parent2, parameters &params, chromosome &offspring1, chromosome &offspring2)
+void one_cut_point_crossover(const t_mep_chromosome &parent1, const t_mep_chromosome &parent2, t_mep_parameters &params, t_mep_chromosome &offspring1, t_mep_chromosome &offspring2)
 {
 	int cutting_pct = rand() % params.code_length;
 	for (int i = 0; i < cutting_pct; i++) {
@@ -388,7 +392,7 @@ void one_cut_point_crossover(const chromosome &parent1, const chromosome &parent
 	}
 }
 //---------------------------------------------------------------------------
-void uniform_crossover(const chromosome &parent1, const chromosome &parent2, parameters &params, chromosome &offspring1, chromosome &offspring2)
+void uniform_crossover(const t_mep_chromosome &parent1, const t_mep_chromosome &parent2, t_mep_parameters &params, t_mep_chromosome &offspring1, t_mep_chromosome &offspring2)
 {
 	for (int i = 0; i < params.code_length; i++)
 		if (rand() % 2) {
@@ -414,16 +418,16 @@ void uniform_crossover(const chromosome &parent1, const chromosome &parent2, par
 //---------------------------------------------------------------------------
 int sort_function(const void *a, const void *b)
 {// comparator for quick sort
-	if (((chromosome *)a)->fitness > ((chromosome *)b)->fitness)
+	if (((t_mep_chromosome *)a)->fitness > ((t_mep_chromosome *)b)->fitness)
 		return 1;
 	else
-		if (((chromosome *)a)->fitness < ((chromosome *)b)->fitness)
+		if (((t_mep_chromosome *)a)->fitness < ((t_mep_chromosome *)b)->fitness)
 			return -1;
 		else
 			return 0;
 }
 //---------------------------------------------------------------------------
-void print_chromosome(chromosome& a, parameters &params, int num_variables)
+void print_chromosome(t_mep_chromosome& a, t_mep_parameters &params, int num_variables)
 {
 	printf("The chromosome is:\n");
 
@@ -432,7 +436,7 @@ void print_chromosome(chromosome& a, parameters &params, int num_variables)
 
 	for (int i = 0; i < params.code_length; i++)
 		if (a.prg[i].op < 0)
-			printf("%d: %c %d %d\n", i, operators_string[abs(a.prg[i].op) - 1], a.prg[i].adr1, a.prg[i].adr2);
+			printf("%d: %c %d %d\n", i, operators_string[abs(a.prg[i].op) - 1], a.prg[i].addr1, a.prg[i].addr2);
 		else
 			if (a.prg[i].op < num_variables)
 				printf("%d: inputs[%d]\n", i, a.prg[i].op);
@@ -443,7 +447,7 @@ void print_chromosome(chromosome& a, parameters &params, int num_variables)
 	printf("Fitness = %lf\n", a.fitness);
 }
 //---------------------------------------------------------------------------
-int tournament_selection(chromosome *pop, int pop_size, int tournament_size)     // Size is the size of the tournament
+int tournament_selection(t_mep_chromosome *pop, int pop_size, int tournament_size)     // Size is the size of the tournament
 {
 	int r, p;
 	p = rand() % pop_size;
@@ -454,19 +458,19 @@ int tournament_selection(chromosome *pop, int pop_size, int tournament_size)    
 	return p;
 }
 //---------------------------------------------------------------------------
-void start_steady_state_mep(parameters &params, double **training_data, double* target, int num_training_data, int num_variables)       // Steady-State 
+void start_steady_state_mep(t_mep_parameters &params, double **training_data, double* target, int num_training_data, int num_variables)       // Steady-State 
 {
 	// a steady state approach:
 	// we work with 1 population
 	// newly created individuals will replace the worst existing ones (only if they are better).
 
 	// allocate memory
-	chromosome *population;
-	population = new chromosome[params.pop_size];
+	t_mep_chromosome *population;
+	population = new t_mep_chromosome[params.pop_size];
 	for (int i = 0; i < params.pop_size; i++)
 		allocate_chromosome(population[i], params);
 
-	chromosome offspring1, offspring2;
+	t_mep_chromosome offspring1, offspring2;
 	allocate_chromosome(offspring1, params);
 	allocate_chromosome(offspring2, params);
 
@@ -543,11 +547,11 @@ void start_steady_state_mep(parameters &params, double **training_data, double* 
 //--------------------------------------------------------------------
 int main(void)
 {
-	parameters params;
+	t_mep_parameters params;
 
 	params.pop_size = 100;						    // the number of individuals in population  (must be an even number!)
 	params.code_length = 50;
-	params.num_generations = 100;					// the number of generations
+	params.num_generations = 1000;					// the number of generations
 	params.mutation_probability = 0.1;              // mutation probability
 	params.crossover_probability = 0.9;             // crossover probability
 
@@ -559,13 +563,13 @@ int main(void)
 	params.constants_min = -1;
 	params.constants_max = 1;
 
-	params.problem_type = 0;             //0 - regression, 1 - classification; DONT FORGET TO SET IT
+	params.problem_type = 1;             //0 - regression, 1 - classification; DONT FORGET TO SET IT
 	params.classification_threshold = 0; // only for classification problems
 
 	int num_training_data, num_variables;
 	double** training_data, *target;
 
-	if (!read_training_data("building1.txt", ' ', training_data, target, num_training_data, num_variables)) {
+	if (!read_training_data("datasets\\cancer1.txt", ' ', training_data, target, num_training_data, num_variables)) {
 		printf("Cannot find file! Please specify the full path!");
 		getchar();
 		return 1;
