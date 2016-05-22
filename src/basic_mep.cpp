@@ -1,6 +1,6 @@
 //---------------------------------------------------------------------------
 //   Multi Expression Programming - basic source code for solving symbolic regression and binary classification problems
-//   (c) Mihai Oltean  www.tcreate.org ; mihai.oltean@gmail.com
+//   (c) Mihai Oltean  www.mepx.org ; mihai.oltean@gmail.com
 //   Last update on: 2016.05.22
 
 //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -551,7 +551,7 @@ int main(void)
 
 	params.pop_size = 100;						    // the number of individuals in population  (must be an even number!)
 	params.code_length = 50;
-	params.num_generations = 1000;					// the number of generations
+	params.num_generations = 200;					// the number of generations
 	params.mutation_probability = 0.1;              // mutation probability
 	params.crossover_probability = 0.9;             // crossover probability
 
