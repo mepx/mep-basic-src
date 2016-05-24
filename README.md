@@ -2,7 +2,7 @@
 
 ## Source code
 
-There are 5 source codes in this repository:
+There are 6 source codes in this repository:
 
 basic_mep.cpp - basic MEP algorithm. Solves regression and binary classification problems. This should be the starting point for everyone.
 
@@ -12,7 +12,9 @@ mep_circuits.cpp - MEP for evolving digital circuits.
 
 mep_threads.cpp - MEP with multiple (sub)populations evolved in different threads for regression and binary classification problems.
 
-mep_multi_class.cpp - basic MEP algorithm. Solves regression and multi-class classification problems.
+mep_multi_class.cpp - MEP algorithm. Solves regression and multi-class classification problems.
+
+mep_parity_adfs.cpp - MEP algorithm with Automatically Defined Functions for even parity problems.
 
 ## How to run
 
@@ -32,6 +34,8 @@ cancer1.txt - this is a classification problem taken from PROBEN1. It is used by
 iris.txt - a classification problem with 3 classes. It is used by mep_multi_class.cpp for training.
 
 gene1.dt - a classification problem with 3 classes. It is used by mep_multi_class.cpp for training.
+
+even_6_parity.txt - even parity problems with 7 inputs. It is used by mep_parity_adfs.cpp for training.
 
 #More info:
 
