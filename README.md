@@ -23,7 +23,7 @@ You also need a dataset from the dataset folder. Make sure that you specify the 
 
 ## Datasets
 
-There are 5 datasets in this repository (check data folder):
+There are 6 datasets in this repository (check data folder):
 
 building1.txt - this is a symbolic regression problem taken from PROBEN1. It is used by mep.cpp, mep_multiple_pop.cpp, mep_multi_class.cpp and mep_threads.cpp for training.
 
@@ -39,7 +39,9 @@ even_6_parity.txt - even parity problems with 7 inputs. It is used by mep_parity
 
 #More info:
 
-http://www.mep.cs.ubbcluj.ro
+www.mepx.org
+
+www.mep.cs.ubbcluj.ro
 
 #Discussion Group:
 
