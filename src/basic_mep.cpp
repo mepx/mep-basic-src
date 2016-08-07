@@ -124,60 +124,6 @@ void delete_partial_expression_values(double **&expression_value, int code_lengt
 	}
 }
 //---------------------------------------------------------------------------
-bool get_next_field(char *start_sir, char list_separator, char* dest, int & size)
-{
-	size = 0;
-	while (start_sir[size] && (start_sir[size] != list_separator) && (start_sir[size] != '\n'))
-		size++;
-	if (!size && !start_sir[size])
-		return false;
-	strncpy(dest, start_sir, size);
-	dest[size] = '\0';
-	return true;
-}
-// ---------------------------------------------------------------------------
-bool read_training_data(const char *filename, char list_separator, double **&training_data, double *&target, int &num_training_data, int &num_variables)
-{
-	FILE* f = fopen(filename, "r");
-	if (!f)
-		return false;
-
-	char *buf = new char[10000];
-	char * start_buf = buf;
-	// count the number of training data and the number of variables
-	num_training_data = 0;
-	while (fgets(buf, 10000, f)) {
-		if (strlen(buf) > 1)
-			num_training_data++;
-		if (num_training_data == 1) {
-			num_variables = 0;
-
-			char tmp_str[10000];
-			int size;
-			bool result = get_next_field(buf, list_separator, tmp_str, size);
-			while (result) {
-				buf = buf + size + 1;
-				result = get_next_field(buf, list_separator, tmp_str, size);
-				num_variables++;
-			}
-		}
-		buf = start_buf;
-	}
-	delete[] start_buf;
-	num_variables--;
-	rewind(f);
-
-	allocate_training_data(training_data, target, num_training_data, num_variables);
-
-	for (int i = 0; i < num_training_data; i++) {
-		for (int j = 0; j < num_variables; j++)
-			fscanf(f, "%lf", &training_data[i][j]);
-		fscanf(f, "%lf", &target[i]);
-	}
-	fclose(f);
-	return true;
-}
-//---------------------------------------------------------------------------
 void delete_data(double **&data, double *&target, int num_training_data)
 {
 	if (data)
@@ -229,7 +175,7 @@ void generate_random_chromosome(t_mep_chromosome &a, t_mep_parameters &params, i
 	}
 }
 //---------------------------------------------------------------------------
-void compute_eval_matrix(t_mep_chromosome &c, int code_length, int num_variables, int num_training_data, double **training_data, double *target, double **eval_matrix)
+void compute_eval_matrix(t_mep_chromosome &c, int code_length, int num_variables, int num_training_data, double **training_data, double **eval_matrix)
 {
 	// we keep intermediate values in a matrix because when an error occurs (like division by 0) we mutate that gene into a variables.
 	// in such case it is faster to have all intermediate results until current gene, so that we don't have to recompute them again.
@@ -284,7 +230,7 @@ void fitness_regression(t_mep_chromosome &c, int code_length, int num_variables,
 	c.fitness = 1e+308;
 	c.best_index = -1;
 
-	compute_eval_matrix(c, code_length, num_variables, num_training_data, training_data, target, eval_matrix);
+	compute_eval_matrix(c, code_length, num_variables, num_training_data, training_data, eval_matrix);
 
 	for (int i = 0; i < code_length; i++) {   // read the chromosome from top to down
 		double sum_of_errors = 0;
@@ -303,15 +249,15 @@ void fitness_classification(t_mep_chromosome &c, int code_length, int num_variab
 	c.fitness = 1e+308;
 	c.best_index = -1;
 
-	compute_eval_matrix(c, code_length, num_variables, num_training_data, training_data, target, eval_matrix);
+	compute_eval_matrix(c, code_length, num_variables, num_training_data, training_data, eval_matrix);
 
 	for (int i = 0; i < code_length; i++) {   // read the chromosome from top to down
 		int count_incorrect_classified = 0;
 		for (int k = 0; k < num_training_data; k++)
 			if (eval_matrix[i][k] < 0) // the program tells me that this data is in class 0
-				count_incorrect_classified += target[k];
+				count_incorrect_classified += (int)target[k];
 			else // the program tells me that this data is in class 1
-				count_incorrect_classified += fabs(1 - target[k]);// difference between obtained and expected
+				count_incorrect_classified += abs(1 - (int)target[k]);// difference between obtained and expected
 
 		if (c.fitness > count_incorrect_classified) {
 			c.fitness = count_incorrect_classified;
@@ -545,6 +491,70 @@ void start_steady_state_mep(t_mep_parameters &params, double **training_data, do
 	delete_partial_expression_values(eval_matrix, params.code_length);
 }
 //--------------------------------------------------------------------
+bool get_next_field(char *start_sir, char list_separator, char* dest, int & size, int &skip_size)
+{
+	skip_size = 0;
+	while (start_sir[skip_size] && (start_sir[skip_size] != '\n') && (start_sir[skip_size] == list_separator))
+		skip_size++;// skip separator at the beginning
+
+	size = 0;
+	while (start_sir[skip_size + size] && (start_sir[skip_size + size] != list_separator) && (start_sir[skip_size + size] != '\n')) // run until a find a separator or end of line or new line char
+		size++;
+
+	if (!size || !start_sir[skip_size + size])
+		return false;
+	strncpy(dest, start_sir + skip_size, size);
+	dest[size] = '\0';
+	return true;
+}
+// ---------------------------------------------------------------------------
+bool read_data(const char *filename, char list_separator, double **&data, double *&target, int &num_data, int &num_variables)
+{
+	FILE* f = fopen(filename, "r");
+	if (!f) {
+		num_data = 0;
+		num_variables = 0;
+		return false;
+	}
+
+	char *buf = new char[10000];
+	char * start_buf = buf;
+	// count the number of training data and the number of variables
+	num_data = 0;
+	while (fgets(buf, 10000, f)) {
+		if (strlen(buf) > 1)
+			num_data++;
+		if (num_data == 1) {
+			num_variables = 0;
+
+			char tmp_str[10000];
+			int size;
+			int skip_size;
+			bool result = get_next_field(buf, list_separator, tmp_str, size, skip_size);
+			while (result) {
+				buf = buf + size + 1 + skip_size;
+				result = get_next_field(buf, list_separator, tmp_str, size, skip_size);
+				num_variables++;
+			}
+		}
+		buf = start_buf;
+	}
+	delete[] start_buf;
+	num_variables--;
+	rewind(f);
+
+	allocate_training_data(data, target, num_data, num_variables);
+
+	for (int i = 0; i < num_data; i++) {
+		for (int j = 0; j < num_variables; j++)
+			fscanf(f, "%lf", &data[i][j]);
+		fscanf(f, "%lf", &target[i]);
+	}
+	fclose(f);
+
+	return true;
+}
+//---------------------------------------------------------------------------
 int main(void)
 {
 	t_mep_parameters params;
@@ -569,7 +579,7 @@ int main(void)
 	int num_training_data, num_variables;
 	double** training_data, *target;
 
-	if (!read_training_data("datasets\\cancer1.txt", ' ', training_data, target, num_training_data, num_variables)) {
+	if (!read_data("datasets\\cancer1.txt", ' ', training_data, target, num_training_data, num_variables)) {
 		printf("Cannot find file! Please specify the full path!");
 		getchar();
 		return 1;
