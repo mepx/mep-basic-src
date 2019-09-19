@@ -1,7 +1,5 @@
 # Multi Expression Programming - source code
 
-## Source code
-
 There are 6 source codes in this repository:
 
 [basic_mep.cpp](src/cpp/basic_mep.cpp) - basic MEP algorithm. Solves regression and binary classification problems. This should be the starting point for everyone.
@@ -37,7 +35,7 @@ gene1.dt - a classification problem with 3 classes. It is used by mep_multi_clas
 
 even_6_parity.txt - even parity problems with 7 inputs. It is used by mep_parity_adfs.cpp for training.
 
-#More info:
+# More info:
 
 [www.mepx.org](www.mepx.org)
 
@@ -45,10 +43,10 @@ even_6_parity.txt - even parity problems with 7 inputs. It is used by mep_parity
 
 [https://github.com/mepx](https://github.com/mepx)
 
-#Discussion Group:
+# Discussion Group:
 
 [https://groups.google.com/d/forum/mepx](https://groups.google.com/d/forum/mepx)
 
-#Contact author:
+# Contact author:
 
 mihai.oltean@gmail.com
