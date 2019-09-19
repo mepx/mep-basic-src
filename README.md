@@ -23,7 +23,7 @@ You also need a dataset from the [datasets](datasets) folder. Make sure that you
 
 There are 6 datasets in this repository (check [datasets](datasets) folder):
 
-[building1.txt](datasets/building1.txt - this is a symbolic regression problem taken from PROBEN1. It is used by [mep.cpp](src/cpp/mep.cpp), [mep_multiple_pop.cpp](src/cpp/mep_multiple_pop.cpp), [mep_multi_class.cpp](src/cpp/mep_multi_class.cpp) and [mep_threads.cpp](src/cpp/mep_threads.cpp) for training.
+[building1.txt](datasets/building1.txt) - this is a symbolic regression problem taken from PROBEN1. It is used by [mep.cpp](src/cpp/mep.cpp), [mep_multiple_pop.cpp](src/cpp/mep_multiple_pop.cpp), [mep_multi_class.cpp](src/cpp/mep_multi_class.cpp) and [mep_threads.cpp](src/cpp/mep_threads.cpp) for training.
 
 [cancer1.txt](datasets/cancer1.txt) - this is a classification problem taken from PROBEN1. It is used by [mep.cpp](src/cpp/mep.cpp), [mep_multiple_pop.cpp](src/cpp/mep_multiple_pop.cpp), [mep_multi_class.cpp](src/cpp/mep_multi_class.cpp) and [mep_threads.cpp](src/cpp/mep_threads.cpp) for training.
 
@@ -37,7 +37,7 @@ There are 6 datasets in this repository (check [datasets](datasets) folder):
 
 # More info:
 
-[www.mepx.org](www.mepx.org)
+[www.mepx.org](https://www.mepx.org)
 
 [mepx.github.io](https://mepx.github.io)
 
