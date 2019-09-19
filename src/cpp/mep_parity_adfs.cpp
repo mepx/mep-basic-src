@@ -1,28 +1,26 @@
 // ---------------------------------------------------------------------------
 // Multi Expression Programming - basic source code for solving Even Parity problems with Automatically Defined Functions
-// (c) Mihai Oltean  www.mepx.org ; mihai.oltean@gmail.com
-// Last update on: 2016.05.22
+// Author: Mihai Oltean, mihai.oltean@gmail.com
+// Version: 2016.05.22
 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// License: MIT
 // ---------------------------------------------------------------------------
 
 // More info at:
 // www.mepx.org
 // www.mep.cs.ubbcluj.ro
 // www.github.com/mepx
+//---------------------------------------------------------------------------
 
 // paper to read:
 // Oltean Mihai, Improving Multi Expression Programming: an Ascending Trail from Sea - level Even-3-parity Problem to Alpine Even-18-Parity Problem, chapter 10, Evolvable Machines: Theory and Applications, Springer - Verlag, edited by Nadia Nedjah(et al.), pp. 229 - 255, 2004
-// http://www.mep.cs.ubbcluj.ro/oltean_parity.pdf
+// https://mepx.github.io/oltean_parity.pdf
+//---------------------------------------------------------------------------
 
 // Compiled with Microsoft Visual C++ 2013, XCode 7 and Embarcadero C++Builder XE
 
 // Please reports any sugestions and/or bugs to mihai.oltean@gmail.com
-
+//---------------------------------------------------------------------------
 // Training data file must have the following format (see even_7_parity.txt):
 
 // m n
