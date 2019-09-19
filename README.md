@@ -16,7 +16,7 @@ There are 6 source codes in this repository:
 
 ## How to run
 
-Take a .cpp program from [src/cpp](src/cpp) folder and compile it.
+Take a _.cpp_ program from [src/cpp](src/cpp) folder and compile it.
 You also need a dataset from the [datasets](datasets) folder. Make sure that you specify the path correctly.
 
 ## Datasets
