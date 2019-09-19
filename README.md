@@ -23,17 +23,17 @@ You also need a dataset from the [datasets](datasets) folder. Make sure that you
 
 There are 6 datasets in this repository (check [datasets](datasets) folder):
 
-building1.txt - this is a symbolic regression problem taken from PROBEN1. It is used by mep.cpp, mep_multiple_pop.cpp, mep_multi_class.cpp and mep_threads.cpp for training.
+[building1.txt](datasets/building1.txt - this is a symbolic regression problem taken from PROBEN1. It is used by [mep.cpp](src/cpp/mep.cpp), [mep_multiple_pop.cpp](src/cpp/mep_multiple_pop.cpp), [mep_multi_class.cpp](src/cpp/mep_multi_class.cpp) and [mep_threads.cpp](src/cpp/mep_threads.cpp) for training.
 
-cancer1.txt - this is a classification problem taken from PROBEN1. It is used by mep.cpp, mep_multiple_pop.cpp, mep_multi_class.cpp and mep_threads.cpp for training.
+[cancer1.txt](datasets/cancer1.txt) - this is a classification problem taken from PROBEN1. It is used by [mep.cpp](src/cpp/mep.cpp), [mep_multiple_pop.cpp](src/cpp/mep_multiple_pop.cpp), [mep_multi_class.cpp](src/cpp/mep_multi_class.cpp) and [mep_threads.cpp](src/cpp/mep_threads.cpp) for training.
 
-2x2_multiplier.txt, 3x3_multiplier.txt - this is a problem of designing digital circuits (for 2x2 and 3x3 multiplication). It is used by mep_circuits.cpp for training.
+[2x2_multiplier.txt](datasets/2x2_multiplier.txt), [3x3_multiplier.txt](datasets/3x3_multiplier.txt) - this is a problem of designing digital circuits (for 2x2 and 3x3 multiplication). It is used by [mep_circuits.cpp](src/cpp/mep_circuits.cpp) for training.
 
-iris.txt - a classification problem with 3 classes. It is used by mep_multi_class.cpp for training.
+[iris.txt](datasets/iris.txt) - a classification problem with 3 classes. It is used by [mep_multi_class.cpp](src/cpp/mep_multi_class.cpp) for training.
 
-gene1.dt - a classification problem with 3 classes. It is used by mep_multi_class.cpp for training.
+[gene1.dt](datasets/gene1.dt) - a classification problem with 3 classes. It is used by [mep_multi_class.cpp](src/cpp/mep_multi_class.cpp) for training.
 
-even_6_parity.txt - even parity problems with 7 inputs. It is used by mep_parity_adfs.cpp for training.
+[even_6_parity.txt](datasets/even_6_parity.txt) - even parity problems with 7 inputs. It is used by [mep_parity_adfs.cpp](src/cpp/mep_parity_adfs.cpp) for training.
 
 # More info:
 
