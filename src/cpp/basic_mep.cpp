@@ -2,13 +2,13 @@
 //	Multi Expression Programming - basic source code for solving symbolic regression and binary classification problems
 //	author: Mihai Oltean  
 //	mihai.oltean@gmail.com
-//	Last update on: 2019.09.19
+//	Last update on: 2021.11.25
 
 //	License: MIT
 //---------------------------------------------------------------------------
 
 //   More info at:  
-//     www.mepx.org
+//     https://mepx.org
 //     https://mepx.github.io
 //     https://github.com/mepx
 
@@ -77,7 +77,7 @@ struct t_mep_parameters{
 	double classification_threshold; // for classification problems only
 };
 //---------------------------------------------------------------------------
-void allocate_chromosome(t_mep_chromosome &c, t_mep_parameters &params)
+void allocate_chromosome(t_mep_chromosome &c, const t_mep_parameters &params)
 {
 	c.code = new t_code3[params.code_length];
 	if (params.num_constants)
@@ -131,7 +131,7 @@ void delete_data(double **&data, double *&target, int num_training_data)
 	delete[] target;
 }
 //---------------------------------------------------------------------------
-void copy_individual(t_mep_chromosome& dest, const t_mep_chromosome& source, t_mep_parameters &params)
+void copy_individual(t_mep_chromosome& dest, const t_mep_chromosome& source, const t_mep_parameters &params)
 {
 	for (int i = 0; i < params.code_length; i++)
 		dest.code[i] = source.code[i];
@@ -141,7 +141,8 @@ void copy_individual(t_mep_chromosome& dest, const t_mep_chromosome& source, t_m
 	dest.best_index = source.best_index;
 }
 //---------------------------------------------------------------------------
-void generate_random_chromosome(t_mep_chromosome &a, t_mep_parameters &params, int num_variables) // randomly initializes the individuals
+void generate_random_chromosome(t_mep_chromosome &a, t_mep_parameters &params, int num_variables) 
+// randomly initializes the individuals
 {
 	// generate constants first
 	for (int c = 0; c < params.num_constants; c++)
@@ -178,12 +179,8 @@ void compute_eval_matrix(t_mep_chromosome &c, int code_length, int num_variables
 	// we keep intermediate values in a matrix because when an error occurs (like division by 0) we mutate that gene into a variables.
 	// in such case it is faster to have all intermediate results until current gene, so that we don't have to recompute them again.
 
-	bool is_error_case;  // division by zero, other errors
-
-
-	for (int i = 0; i < code_length; i++)   // read the chromosome from top to down
-	{
-		is_error_case = false;
+	for (int i = 0; i < code_length; i++){   // read the chromosome from top to down
+		bool is_error_case = false;// division by zero, other errors
 		switch (c.code[i].op) {
 
 		case  -1:  // +
@@ -223,7 +220,7 @@ void compute_eval_matrix(t_mep_chromosome &c, int code_length, int num_variables
 	}
 }
 //---------------------------------------------------------------------------
-void fitness_regression(t_mep_chromosome &c, int code_length, int num_variables, int num_training_data, double **training_data, double *target, double **eval_matrix)
+void fitness_regression(t_mep_chromosome &c, int code_length, int num_variables, int num_training_data, const double **training_data, const double *target, double **eval_matrix)
 {
 	c.fitness = 1e+308;
 	c.best_index = -1;
@@ -311,7 +308,7 @@ void mutation(t_mep_chromosome &a_chromosome, t_mep_parameters params, int num_v
 
 }
 //---------------------------------------------------------------------------
-void one_cut_point_crossover(const t_mep_chromosome &parent1, const t_mep_chromosome &parent2, t_mep_parameters &params, t_mep_chromosome &offspring1, t_mep_chromosome &offspring2)
+void one_cut_point_crossover(const t_mep_chromosome &parent1, const t_mep_chromosome &parent2, const t_mep_parameters &params, t_mep_chromosome &offspring1, t_mep_chromosome &offspring2)
 {
 	int cutting_pct = rand() % params.code_length;
 	for (int i = 0; i < cutting_pct; i++) {
@@ -336,7 +333,7 @@ void one_cut_point_crossover(const t_mep_chromosome &parent1, const t_mep_chromo
 	}
 }
 //---------------------------------------------------------------------------
-void uniform_crossover(const t_mep_chromosome &parent1, const t_mep_chromosome &parent2, t_mep_parameters &params, t_mep_chromosome &offspring1, t_mep_chromosome &offspring2)
+void uniform_crossover(const t_mep_chromosome &parent1, const t_mep_chromosome &parent2, const t_mep_parameters &params, t_mep_chromosome &offspring1, t_mep_chromosome &offspring2)
 {
 	for (int i = 0; i < params.code_length; i++)
 		if (rand() % 2) {
@@ -371,7 +368,7 @@ int sort_function(const void *a, const void *b)
 			return 0;
 }
 //---------------------------------------------------------------------------
-void print_chromosome(t_mep_chromosome& a, t_mep_parameters &params, int num_variables)
+void print_chromosome(const t_mep_chromosome& a, const t_mep_parameters &params, int num_variables)
 {
 	printf("The chromosome is:\n");
 
@@ -393,10 +390,10 @@ void print_chromosome(t_mep_chromosome& a, t_mep_parameters &params, int num_var
 //---------------------------------------------------------------------------
 int tournament_selection(t_mep_chromosome *pop, int pop_size, int tournament_size)     // Size is the size of the tournament
 {
-	int r, p;
+	int p;
 	p = rand() % pop_size;
 	for (int i = 1; i < tournament_size; i++) {
-		r = rand() % pop_size;
+		int r = rand() % pop_size;
 		p = pop[r].fitness < pop[p].fitness ? r : p;
 	}
 	return p;
