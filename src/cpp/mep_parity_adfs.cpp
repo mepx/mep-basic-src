@@ -1,14 +1,13 @@
 // ---------------------------------------------------------------------------
 // Multi Expression Programming - basic source code for solving Even Parity problems with Automatically Defined Functions
 // Author: Mihai Oltean, mihai.oltean@gmail.com
-// Version: 2016.05.22
+// Version: 2021.11.25
 
 // License: MIT
 // ---------------------------------------------------------------------------
 
 // More info at:
 // www.mepx.org
-// www.mep.cs.ubbcluj.ro
 // www.github.com/mepx
 //---------------------------------------------------------------------------
 
@@ -17,7 +16,7 @@
 // https://mepx.github.io/oltean_parity.pdf
 //---------------------------------------------------------------------------
 
-// Compiled with Microsoft Visual C++ 2013, XCode 7 and Embarcadero C++Builder XE
+// Compiled with Microsoft Visual C++ 2019, XCode 7 and Embarcadero C++Builder XE
 
 // Please reports any sugestions and/or bugs to mihai.oltean@gmail.com
 //---------------------------------------------------------------------------
@@ -75,7 +74,7 @@ struct t_mep_parameters {
 	int num_adf_parameters[3];// for 3 ADF
 };
 // ---------------------------------------------------------------------------
-void allocate_chromosome(t_mep_chromosome &c, t_mep_parameters &params)
+void allocate_chromosome(t_mep_chromosome &c, const t_mep_parameters &params)
 {
 	c.prg = new t_code3[params.code_length];
 	c.adf_0 = new t_code3[params.adf_code_length];
@@ -113,7 +112,8 @@ void allocate_training_data(int **&data, int *&target, int num_training_data, in
 }
 
 // ---------------------------------------------------------------------------
-void allocate_partial_expression_values(int **&expression_value, int **&adf_value, int num_training_data, int code_length, int adf_code_length)
+void allocate_partial_expression_values(int **&expression_value, int **&adf_value, 
+			int num_training_data, int code_length, int adf_code_length)
 {
 	expression_value = new int*[code_length];
 	for (int i = 0; i < code_length; i++)
@@ -172,7 +172,7 @@ void delete_data(int **&data, int *&target, int num_training_data)
 }
 
 // ---------------------------------------------------------------------------
-void copy_individual(t_mep_chromosome& dest, const t_mep_chromosome& source, t_mep_parameters &params)
+void copy_individual(t_mep_chromosome& dest, const t_mep_chromosome& source, const t_mep_parameters &params)
 {
 	for (int i = 0; i < params.code_length; i++)
 		dest.prg[i] = source.prg[i];
@@ -186,7 +186,7 @@ void copy_individual(t_mep_chromosome& dest, const t_mep_chromosome& source, t_m
 }
 
 // ---------------------------------------------------------------------------
-void generate_random_chromosome(t_mep_chromosome &a, t_mep_parameters &params, int num_variables) // randomly initializes the individuals
+void generate_random_chromosome(t_mep_chromosome &a, const t_mep_parameters &params, int num_variables) // randomly initializes the individuals
 {
 	// on the first position we can have only a variable
 
@@ -258,7 +258,8 @@ void generate_random_chromosome(t_mep_chromosome &a, t_mep_parameters &params, i
 }
 
 // ---------------------------------------------------------------------------
-int compute_ADF(t_code3* adf_code, int adf_code_length, int num_training_data, int **adf_inputs, int* target, int **adf_cache_matrix, int &best_index)
+int compute_ADF(t_code3* adf_code, int adf_code_length, int num_training_data, 
+			int **adf_inputs, const int* target, int **adf_cache_matrix, int &best_index)
 {
 	int best_error = num_training_data + 1;
 	int sum_errors;
@@ -308,7 +309,9 @@ int compute_ADF(t_code3* adf_code, int adf_code_length, int num_training_data, i
 }
 
 // ---------------------------------------------------------------------------
-void fitness(t_mep_chromosome &c, int code_length, int adf_code_length, int num_variables, int num_training_data, int **training_data, int *target, int **cache_matrix, int **adf_cache_matrix)
+void fitness(t_mep_chromosome &c, int code_length, int adf_code_length, 
+				int num_variables, int num_training_data, int **training_data, int *target, 
+				int **cache_matrix, int **adf_cache_matrix)
 {
 	// evaluate Individual
 	c.fitness = num_training_data + 1;
@@ -387,7 +390,7 @@ void fitness(t_mep_chromosome &c, int code_length, int adf_code_length, int num_
 }
 
 // ---------------------------------------------------------------------------
-void mutation(t_mep_chromosome &a_chromosome, t_mep_parameters params, int num_variables) // mutate the individual
+void mutation(t_mep_chromosome &a_chromosome, const t_mep_parameters &params, int num_variables) // mutate the individual
 {
 	// main program
 	// mutate each symbol with the given probability
@@ -507,9 +510,10 @@ void mutation(t_mep_chromosome &a_chromosome, t_mep_parameters params, int num_v
 			a_chromosome.adf_2[i].addr2 = rand() % i;
 	}
 }
-
 // ---------------------------------------------------------------------------
-void one_cut_point_crossover(const t_mep_chromosome &parent1, const t_mep_chromosome &parent2, t_mep_parameters &params, t_mep_chromosome &offspring1, t_mep_chromosome &offspring2)
+void one_cut_point_crossover(const t_mep_chromosome &parent1, const t_mep_chromosome &parent2, 
+				const t_mep_parameters &params,
+				t_mep_chromosome &offspring1, t_mep_chromosome &offspring2)
 {
 	// main program
 	int cutting_pct = rand() % params.code_length;
@@ -556,7 +560,10 @@ void one_cut_point_crossover(const t_mep_chromosome &parent1, const t_mep_chromo
 }
 
 // ---------------------------------------------------------------------------
-void uniform_crossover(const t_mep_chromosome &parent1, const t_mep_chromosome &parent2, t_mep_parameters &params, t_mep_chromosome &offspring1, t_mep_chromosome &offspring2)
+void uniform_crossover(
+	const t_mep_chromosome &parent1, const t_mep_chromosome &parent2, 
+	const t_mep_parameters &params, 
+	t_mep_chromosome &offspring1, t_mep_chromosome &offspring2)
 {
 	for (int i = 0; i < params.code_length; i++)
 		if (rand() % 2) {
@@ -615,7 +622,7 @@ int sort_function(const void *a, const void *b)
 }
 
 // ---------------------------------------------------------------------------
-void print_chromosome(t_mep_chromosome& a, t_mep_parameters &params, int num_variables)
+void print_chromosome(const t_mep_chromosome& a, const t_mep_parameters &params, int num_variables)
 {
 	printf("The best solution is:\n");
 
@@ -662,19 +669,20 @@ void print_chromosome(t_mep_chromosome& a, t_mep_parameters &params, int num_var
 }
 
 // ---------------------------------------------------------------------------
-int tournament_selection(t_mep_chromosome *pop, int pop_size, int tournament_size) // Size is the size of the tournament
+int tournament_selection(const t_mep_chromosome *pop, int pop_size, int tournament_size) // Size is the size of the tournament
 {
-	int r, p;
+	int p;
 	p = rand() % pop_size;
 	for (int i = 1; i < tournament_size; i++) {
-		r = rand() % pop_size;
+		int r = rand() % pop_size;
 		p = pop[r].fitness < pop[p].fitness ? r : p;
 	}
 	return p;
 }
 
 // ---------------------------------------------------------------------------
-void start_steady_state_mep(t_mep_parameters &params, int **training_data, int* target, int num_training_data, int num_variables) // Steady-State
+void start_steady_state_mep(const t_mep_parameters &params, 
+			int **training_data, int* target, int num_training_data, int num_variables) // Steady-State
 {
 	// a steady state approach:
 	// we work with 1 population

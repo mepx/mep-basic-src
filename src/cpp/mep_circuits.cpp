@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 //   Multi Expression Programming source code - for designing digital circuits
 //   Copyright Mihai Oltean  (mihai.oltean@gmail.com)
-//   Version 2016.02.03
+//   Version 2021.11.25
 
 //   License: MIT
 //---------------------------------------------------------------------------
@@ -14,7 +14,7 @@
 //   Compiled with Microsoft Visual C++ 2013
 
 //   More info at:  
-//     www.mepx.org
+//     https://mepx.org
 //     https://mepx.github.io
 //     https://github.com/mepx
 
@@ -47,7 +47,7 @@
 char operators_string[3][10] = {"a&b", "a&!b", "a^b"};
 
 //---------------------------------------------------------------------------
-struct code3{
+struct t_code3{
 	int op;				// either a variable, operator or constant; 
 	// variables are indexed from 0: 0,1,2,...; 
 	// constants are indexed from num_variables
@@ -55,8 +55,8 @@ struct code3{
 	int adr1, adr2;    // pointers to arguments
 };
 //---------------------------------------------------------------------------
-struct chromosome{
-	code3 *prg;          // the circuit - a string of genes
+struct t_chromosome{
+	t_code3 *prg;          // the circuit - a string of genes
 
 	int fitness;         // the fitness (or the error)
 	                     // number of incorrectly computed outputs
@@ -65,7 +65,7 @@ struct chromosome{
 	int num_gates;       // the actual number of utilized gates
 };
 //---------------------------------------------------------------------------
-struct s_parameters{
+struct t_parameters{
 	int code_length;             // number of instructions in a chromosome
 	int num_generations;
 	int pop_size;                // population size
@@ -73,13 +73,13 @@ struct s_parameters{
 	double variables_probability, operators_probability;
 };
 //---------------------------------------------------------------------------
-void allocate_chromosome(chromosome &a_chromosome, int code_length, int num_outputs)
+void allocate_chromosome(t_chromosome &a_chromosome, int code_length, int num_outputs)
 {
-	a_chromosome.prg = new code3[code_length];
+	a_chromosome.prg = new t_code3[code_length];
 	a_chromosome.best_index = new int[num_outputs];
 }
 //---------------------------------------------------------------------------
-void delete_chromosome(chromosome &a_chromosome)
+void delete_chromosome(t_chromosome &a_chromosome)
 {
 	if (a_chromosome.prg) {
 		delete[] a_chromosome.prg;
@@ -165,7 +165,7 @@ void delete_data(int **&input, int **&target, int num_training_data)
 	}
 }
 //---------------------------------------------------------------------------
-void copy_individual(chromosome& dest, const chromosome& source, int code_length, int num_outputs)
+void copy_individual(t_chromosome& dest, const t_chromosome& source, int code_length, int num_outputs)
 {
 	for (int i = 0; i < code_length; i++)
 		dest.prg[i] = source.prg[i];
@@ -177,7 +177,7 @@ void copy_individual(chromosome& dest, const chromosome& source, int code_length
 	dest.num_gates = source.num_gates;
 }
 //---------------------------------------------------------------------------
-void generate_random_chromosome(chromosome &a_chromosome, s_parameters &params, int num_variables)
+void generate_random_chromosome(t_chromosome &a_chromosome, t_parameters &params, int num_variables)
 // randomly initializes an individual
 {
 	// on the first position we can have only a variable
@@ -198,7 +198,7 @@ void generate_random_chromosome(chromosome &a_chromosome, s_parameters &params, 
 	}
 }
 //---------------------------------------------------------------------------
-void mark_all(chromosome& a_chromosome, bool *marked, int current_index)
+void mark_all(t_chromosome& a_chromosome, bool *marked, int current_index)
 {
 	// recusively mark all genes of a program
 	if (!marked[current_index]) {
@@ -211,14 +211,13 @@ void mark_all(chromosome& a_chromosome, bool *marked, int current_index)
 }
 //---------------------------------------------------------------------------
 // evaluate Individual
-void fitness(chromosome &a_chromosome, int code_length, int num_variables, int num_training_data, int num_outputs, int **training_data, int **target, int **eval_matrix, int **error_matrix)
+void fitness(t_chromosome &a_chromosome, int code_length, int num_variables, int num_training_data, int num_outputs, int **training_data, int **target, int **eval_matrix, int **error_matrix)
 {
 	a_chromosome.fitness = num_outputs * num_training_data + 1; // the worst error we could have + 1
 
 	// we keep intermediate values in a matrix
 
-	for (int i = 0; i < code_length; i++)   // read the chromosome from top to down
-	{
+	for (int i = 0; i < code_length; i++){   // read the chromosome from top to down
 		for (int o = 0; o < num_outputs; o++)
 			error_matrix[i][o] = 0;
 
@@ -294,7 +293,7 @@ void fitness(chromosome &a_chromosome, int code_length, int num_variables, int n
 
 }
 //---------------------------------------------------------------------------
-void mutation(chromosome &a_chromosome, s_parameters params, int num_variables) // mutate the individual
+void mutation(t_chromosome &a_chromosome, t_parameters params, int num_variables) // mutate the individual
 {
 	// mutate each symbol with the given probability
 	double p = rand() / (double)RAND_MAX;
@@ -322,7 +321,10 @@ void mutation(chromosome &a_chromosome, s_parameters params, int num_variables) 
 	}
 }
 //---------------------------------------------------------------------------
-void one_cut_point_crossover(const chromosome &parent1, const chromosome &parent2, s_parameters &params, chromosome &offspring1, chromosome &offspring2)
+void one_cut_point_crossover(
+			const t_chromosome &parent1, const t_chromosome &parent2, 
+			const t_parameters &params, 
+			t_chromosome &offspring1, t_chromosome &offspring2)
 {
 	int cutting_pct = rand() % params.code_length;
 	for (int i = 0; i < cutting_pct; i++) {
@@ -335,7 +337,10 @@ void one_cut_point_crossover(const chromosome &parent1, const chromosome &parent
 	}
 }
 //---------------------------------------------------------------------------
-void uniform_crossover(const chromosome &parent1, const chromosome &parent2, s_parameters &params, chromosome &offspring1, chromosome &offspring2)
+void uniform_crossover(
+			const t_chromosome &parent1, const t_chromosome &parent2, 
+			const t_parameters &params,
+			t_chromosome &offspring1, t_chromosome &offspring2)
 {
 	for (int i = 0; i < params.code_length; i++)
 		if (rand() % 2) {
@@ -350,8 +355,8 @@ void uniform_crossover(const chromosome &parent1, const chromosome &parent2, s_p
 //---------------------------------------------------------------------------
 int sort_function(const void *a, const void *b)
 {// comparator for quick sort
-	chromosome * c1 = (chromosome *)a;
-	chromosome * c2 = (chromosome *)b;
+	t_chromosome * c1 = (t_chromosome *)a;
+	t_chromosome * c2 = (t_chromosome *)b;
 	if (c1->fitness > c2->fitness)
 		return 1;
 	else
@@ -368,7 +373,7 @@ int sort_function(const void *a, const void *b)
 					0;
 }
 //---------------------------------------------------------------------------
-void print_chromosome(chromosome& a_chromosome, int code_length, int num_variables, int num_outputs)
+void print_chromosome(const t_chromosome& a_chromosome, int code_length, int num_variables, int num_outputs)
 {
 	printf("The chromosome is:\n");
 
@@ -385,26 +390,26 @@ void print_chromosome(chromosome& a_chromosome, int code_length, int num_variabl
 	printf("Num gates = %d\n", a_chromosome.num_gates);
 }
 //---------------------------------------------------------------------------
-int tournament_selection(chromosome *pop, int pop_size, int tournament_size)     // Size is the size of the tournament
+int tournament_selection(t_chromosome *pop, int pop_size, int tournament_size)     // Size is the size of the tournament
 {
-	int r, p;
+	int p;
 	p = rand() % pop_size;
 	for (int i = 1; i < tournament_size; i++) {
-		r = rand() % pop_size;
+		int r = rand() % pop_size;
 		p = pop[r].fitness < pop[p].fitness ? r : p;
 	}
 	return p;
 }
 //---------------------------------------------------------------------------
-void start_steady_state_mep(s_parameters &params, int **training_data, int** target, int num_training_data, int num_variables, int num_outputs)       // Steady-State 
+void start_steady_state_mep(t_parameters &params, int **training_data, int** target, int num_training_data, int num_variables, int num_outputs)       // Steady-State 
 {
 	// allocate memory
-	chromosome *population;
-	population = new chromosome[params.pop_size];
+	t_chromosome *population;
+	population = new t_chromosome[params.pop_size];
 	for (int i = 0; i < params.pop_size; i++)
 		allocate_chromosome(population[i], params.code_length, num_outputs);
 
-	chromosome offspring1, offspring2;
+	t_chromosome offspring1, offspring2;
 	allocate_chromosome(offspring1, params.code_length, num_outputs);
 	allocate_chromosome(offspring2, params.code_length, num_outputs);
 
@@ -479,7 +484,7 @@ void start_steady_state_mep(s_parameters &params, int **training_data, int** tar
 //--------------------------------------------------------------------
 int main(void)
 {
-	s_parameters params;
+	t_parameters params;
 
 	params.pop_size = 200;						    // the number of individuals in population  (must be an even number!)
 	params.code_length = 30;						// max number of gates in the circuit

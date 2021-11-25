@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 //   Multi Expression Programming Software - with multiple subpopulations and threads
 //   Author: Mihai Oltean  (mihai.oltean@gmail.com)
-//   Version: 2021.07.11
+//   Version: 2021.11.25.0
 
 //   License: MIT
 //---------------------------------------------------------------------------
@@ -11,8 +11,8 @@
 
 //   I recommend to check the basic variant first (without subpopulations and threads)
 //---------------------------------------------------------------------------
-//   Compiled with Microsoft Visual C++ 2013
-//   Also compiled with XCode 5.
+//   Compiled with Microsoft Visual C++ 2019
+//   Also compiled with XCode 13.
 //   Requires C++11 or newer (for thread support)
 
 //---------------------------------------------------------------------------
@@ -44,6 +44,7 @@
 #include <string.h>
 #include <thread>
 #include <mutex>
+//--------------------------------------------------------------------
 
 #define num_operators 4
 
@@ -238,7 +239,7 @@ void generate_random_chromosome(t_chromosome &a, const t_parameters &params, int
 
 	// for all other genes we put either an operator, variable or constant
 	for (int i = 1; i < params.code_length; i++) {
-		double p = rand() / (double)RAND_MAX;
+		p = rand() / (double)RAND_MAX;
 
 		if (p <= params.operators_probability)
 			a.prg[i].op = -rand() % num_operators - 1;        // an operator
@@ -260,12 +261,10 @@ void compute_eval_matrix(t_chromosome &c,
 	// we keep intermediate values in a matrix because when an error occurs (like division by 0) we mutate that gene into a variables.
 	// in such case it is faster to have all intermediate results until current gene, so that we don't have to recompute them again.
 
-	bool is_error_case;  // division by zero, other errors
 
-
-	for (int i = 0; i < code_length; i++)   // read the chromosome from top to down
-	{
-		is_error_case = false;
+	for (int i = 0; i < code_length; i++){   // read the chromosome from top to down
+	
+		bool is_error_case = false;// division by zero, other errors
 		switch (c.prg[i].op) {
 
 		case  -1:  // +
@@ -358,7 +357,7 @@ void mutation(t_chromosome &a_chromosome, const t_parameters& params, int num_va
 	double p = rand() / (double)RAND_MAX;
 	if (p < params.mutation_probability) {
 		double sum = params.variables_probability + params.constants_probability;
-		double p = rand() / (double)RAND_MAX * sum;
+		p = rand() / (double)RAND_MAX * sum;
 
 		if (p <= params.variables_probability)
 			a_chromosome.prg[0].op = rand() % num_variables;
@@ -484,10 +483,10 @@ void print_chromosome(const t_chromosome& a, const t_parameters &params, int num
 //---------------------------------------------------------------------------
 int tournament_selection(const t_chromosome *a_sub_pop, int sub_pop_size, int tournament_size)     // Size is the size of the tournament
 {
-	int r, p;
+	int p;
 	p = rand() % sub_pop_size;
 	for (int i = 1; i < tournament_size; i++) {
-		r = rand() % sub_pop_size;
+		int r = rand() % sub_pop_size;
 		p = a_sub_pop[r].fitness < a_sub_pop[p].fitness ? r : p;
 	}
 	return p;
