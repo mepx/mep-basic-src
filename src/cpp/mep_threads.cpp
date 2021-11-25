@@ -351,7 +351,7 @@ void fitness_binary_classification(t_chromosome &c, int code_length, int num_var
 	}
 }
 //---------------------------------------------------------------------------
-void mutation(t_chromosome &a_chromosome, const t_parameters params, int num_variables) // mutate the individual
+void mutation(t_chromosome &a_chromosome, const t_parameters& params, int num_variables) // mutate the individual
 {
 	// mutate each symbol with the given probability
 	// first gene must be a variable or constant
