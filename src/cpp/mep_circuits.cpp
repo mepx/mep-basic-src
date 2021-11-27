@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 //   Multi Expression Programming source code - for designing digital circuits
 //   Copyright Mihai Oltean  (mihai.oltean@gmail.com)
-//   Version 2021.11.25
+//   Version 2021.11.26
 
 //   License: MIT
 //---------------------------------------------------------------------------
@@ -48,10 +48,9 @@ char operators_string[3][10] = {"a&b", "a&!b", "a^b"};
 
 //---------------------------------------------------------------------------
 struct t_code3{
-	int op;				// either a variable, operator or constant; 
-	// variables are indexed from 0: 0,1,2,...; 
-	// constants are indexed from num_variables
-	// operators are -1, -2, -3...
+	int op;				// either an input (variable) or a gate (operator); 
+	// inputs are indexed from 0: 0,1,2,...; 
+	// gates are -1, -2, -3...
 	int adr1, adr2;    // pointers to arguments
 };
 //---------------------------------------------------------------------------
@@ -90,21 +89,21 @@ void delete_chromosome(t_chromosome &a_chromosome)
 	}
 }
 //---------------------------------------------------------------------------
-void allocate_training_data(int **&input, int **&target, int num_training_data, int num_variables, int num_outputs)
+void allocate_training_data(char **&input, char**&target, int num_training_data, int num_variables, int num_outputs)
 {
-	target = new int*[num_training_data];
-	input = new int*[num_training_data];
+	target = new char*[num_training_data];
+	input = new char*[num_training_data];
 	for (int i = 0; i < num_training_data; i++) {
-		input[i] = new int[num_variables];
-		target[i] = new int[num_outputs];
+		input[i] = new char[num_variables];
+		target[i] = new char[num_outputs];
 	}
 }
 //---------------------------------------------------------------------------
-void allocate_partial_expression_values(int **&expression_value, int num_training_data, int code_length)
+void allocate_partial_expression_values(char**&expression_value, int num_training_data, int code_length)
 {
-	expression_value = new int*[code_length];
+	expression_value = new char*[code_length];
 	for (int i = 0; i < code_length; i++)
-		expression_value[i] = new int[num_training_data];
+		expression_value[i] = new char[num_training_data];
 }
 //---------------------------------------------------------------------------
 void allocate_error_matrix(int **&error_matrix, int code_length, int num_outputs)
@@ -114,7 +113,7 @@ void allocate_error_matrix(int **&error_matrix, int code_length, int num_outputs
 		error_matrix[i] = new int[num_outputs];
 }
 //---------------------------------------------------------------------------
-void delete_partial_expression_values(int **&expression_value, int code_length)
+void delete_partial_expression_values(char**&expression_value, int code_length)
 {
 	if (expression_value) {
 		for (int i = 0; i < code_length; i++)
@@ -132,7 +131,7 @@ void delete_error_matrix(int **&error_matrix, int code_length)
 	}
 }
 //---------------------------------------------------------------------------
-bool read_training_data(const char *filename, char list_separator, int **&training_data, int **&target, int &num_training_data, int &num_variables, int &num_outputs)
+bool read_training_data(const char *filename, char list_separator, char**&training_data, char**&target, int &num_training_data, int &num_variables, int &num_outputs)
 {
 	FILE* f = fopen(filename, "r");
 	if (!f)
@@ -143,17 +142,22 @@ bool read_training_data(const char *filename, char list_separator, int **&traini
 
 	allocate_training_data(training_data, target, num_training_data, num_variables, num_outputs);
 
+	int c;
 	for (int i = 0; i < num_training_data; i++) {
-		for (int j = 0; j < num_variables; j++)
-			fscanf(f, "%d", &training_data[i][j]);
-		for (int j = 0; j < num_outputs; j++)
-			fscanf(f, "%d", &target[i][j]);
+		for (int j = 0; j < num_variables; j++) {
+			fscanf(f, "%d", &c);
+			training_data[i][j] = c;
+		}
+		for (int j = 0; j < num_outputs; j++) {
+			fscanf(f, "%d", &c);
+			target[i][j] = c;
+		}
 	}
 	fclose(f);
 	return true;
 }
 //---------------------------------------------------------------------------
-void delete_data(int **&input, int **&target, int num_training_data)
+void delete_data(char **&input, char**&target, int num_training_data)
 {
 	if (input) {
 		for (int i = 0; i < num_training_data; i++) {
@@ -177,7 +181,7 @@ void copy_individual(t_chromosome& dest, const t_chromosome& source, int code_le
 	dest.num_gates = source.num_gates;
 }
 //---------------------------------------------------------------------------
-void generate_random_chromosome(t_chromosome &a_chromosome, t_parameters &params, int num_variables)
+void generate_random_chromosome(t_chromosome &a_chromosome, const t_parameters &params, int num_variables)
 // randomly initializes an individual
 {
 	// on the first position we can have only a variable
@@ -198,12 +202,12 @@ void generate_random_chromosome(t_chromosome &a_chromosome, t_parameters &params
 	}
 }
 //---------------------------------------------------------------------------
-void mark_all(t_chromosome& a_chromosome, bool *marked, int current_index)
+void mark_all(const t_chromosome& a_chromosome, char*marked, int current_index)
 {
 	// recusively mark all genes of a program
 	if (!marked[current_index]) {
 		if (a_chromosome.prg[current_index].op < 0) { // if it is an operator... mark all its arguments
-			marked[current_index] = true;
+			marked[current_index] = 1;
 			mark_all(a_chromosome, marked, a_chromosome.prg[current_index].adr1);
 			mark_all(a_chromosome, marked, a_chromosome.prg[current_index].adr2);
 		}
@@ -211,7 +215,8 @@ void mark_all(t_chromosome& a_chromosome, bool *marked, int current_index)
 }
 //---------------------------------------------------------------------------
 // evaluate Individual
-void fitness(t_chromosome &a_chromosome, int code_length, int num_variables, int num_training_data, int num_outputs, int **training_data, int **target, int **eval_matrix, int **error_matrix)
+void fitness(t_chromosome &a_chromosome, int code_length, int num_variables, int num_training_data, int num_outputs, 
+	char**training_data, char**target, char**eval_matrix, int **error_matrix)
 {
 	a_chromosome.fitness = num_outputs * num_training_data + 1; // the worst error we could have + 1
 
@@ -255,13 +260,13 @@ void fitness(t_chromosome &a_chromosome, int code_length, int num_variables, int
 	}
 	// now I have to assign genes to outputs
 	a_chromosome.fitness = 0;
-	bool *used_gene = new bool[code_length];
-	bool *used_output = new bool[num_outputs];
-	bool *marked = new bool[code_length];
+	char*used_gene = new char[code_length];
+	char*used_output = new char[num_outputs];
+	char*marked = new char[code_length];
 
-	for (int i = 0; i < code_length; marked[i++] = false);
-	for (int i = 0; i < code_length; used_gene[i++] = false);
-	for (int i = 0; i < num_outputs; used_output[i++] = false);
+	for (int i = 0; i < code_length; marked[i++] = 0);
+	for (int i = 0; i < code_length; used_gene[i++] = 0);
+	for (int i = 0; i < num_outputs; used_output[i++] = 0);
 
 	for (int i = 0; i < num_outputs; i++) { // must repeat num_outputs because we have to find which genes provides which output
 		int min_error = num_outputs * num_training_data + 1; // max error possible + 1
@@ -275,8 +280,8 @@ void fitness(t_chromosome &a_chromosome, int code_length, int num_variables, int
 						selected_gene = g;
 						selected_output = o;
 					}
-		used_gene[selected_gene] = true;
-		used_output[selected_output] = true;
+		used_gene[selected_gene] = 1;
+		used_output[selected_output] = 1;
 		mark_all(a_chromosome, marked, selected_gene);
 		a_chromosome.fitness += min_error;
 		a_chromosome.best_index[selected_output] = selected_gene;
@@ -293,7 +298,7 @@ void fitness(t_chromosome &a_chromosome, int code_length, int num_variables, int
 
 }
 //---------------------------------------------------------------------------
-void mutation(t_chromosome &a_chromosome, t_parameters params, int num_variables) // mutate the individual
+void mutation(t_chromosome &a_chromosome, const t_parameters &params, int num_variables) // mutate the individual
 {
 	// mutate each symbol with the given probability
 	double p = rand() / (double)RAND_MAX;
@@ -390,7 +395,7 @@ void print_chromosome(const t_chromosome& a_chromosome, int code_length, int num
 	printf("Num gates = %d\n", a_chromosome.num_gates);
 }
 //---------------------------------------------------------------------------
-int tournament_selection(t_chromosome *pop, int pop_size, int tournament_size)     // Size is the size of the tournament
+int tournament_selection(const t_chromosome *pop, int pop_size, int tournament_size)     // Size is the size of the tournament
 {
 	int p;
 	p = rand() % pop_size;
@@ -401,7 +406,8 @@ int tournament_selection(t_chromosome *pop, int pop_size, int tournament_size)  
 	return p;
 }
 //---------------------------------------------------------------------------
-void start_steady_state_mep(t_parameters &params, int **training_data, int** target, int num_training_data, int num_variables, int num_outputs)       // Steady-State 
+void start_steady_state_mep(t_parameters &params, char**training_data, char** target, 
+		int num_training_data, int num_variables, int num_outputs)       // Steady-State 
 {
 	// allocate memory
 	t_chromosome *population;
@@ -413,7 +419,7 @@ void start_steady_state_mep(t_parameters &params, int **training_data, int** tar
 	allocate_chromosome(offspring1, params.code_length, num_outputs);
 	allocate_chromosome(offspring2, params.code_length, num_outputs);
 
-	int ** eval_matrix;
+	char** eval_matrix;
 	int **error_matrix;
 	allocate_partial_expression_values(eval_matrix, num_training_data, params.code_length);
 	allocate_error_matrix(error_matrix, params.code_length, num_outputs);
@@ -476,8 +482,6 @@ void start_steady_state_mep(t_parameters &params, int **training_data, int** tar
 		delete_chromosome(population[i]);
 	delete[] population;
 
-	delete_data(training_data, target, num_training_data);
-
 	delete_partial_expression_values(eval_matrix, params.code_length);
 	delete_error_matrix(error_matrix, params.code_length);
 }
@@ -486,17 +490,17 @@ int main(void)
 {
 	t_parameters params;
 
-	params.pop_size = 200;						    // the number of individuals in population  (must be an even number!)
+	params.pop_size = 100;						    // the number of individuals in population  (must be an even number!)
 	params.code_length = 30;						// max number of gates in the circuit
 	params.num_generations = 1000;					// the number of generations
-	params.mutation_probability = 0.01;              // mutation probability
+	params.mutation_probability = 0.02;              // mutation probability
 	params.crossover_probability = 0.9;             // crossover probability
 
-	params.variables_probability = 0.5;
-	params.operators_probability = 0.5;
+	params.variables_probability = 0.1;
+	params.operators_probability = 0.9;
 
 	int num_training_data, num_variables, num_outputs;
-	int** training_data, **target;
+	char** training_data, **target;
 
 	if (!read_training_data("2x2_multiplier.txt", ' ', training_data, target, num_training_data, num_variables, num_outputs)) {
 		printf("Cannot find file 2x2_multiplier.txt! Please specify the full path!");
@@ -506,6 +510,8 @@ int main(void)
 
 	srand(1);
 	start_steady_state_mep(params, training_data, target, num_training_data, num_variables, num_outputs);
+
+	delete_data(training_data, target, num_training_data);
 
 	printf("Press enter ...");
 	getchar();
