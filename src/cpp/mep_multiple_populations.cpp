@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 //   Multi Expression Programming Software - with multiple subpopulations
 //   Author: Mihai Oltean (mihai.oltean@gmail.com)
-//   Version: 2021.11.25
+//   Version: 2021.11.27
 
 //   License: MIT
 //---------------------------------------------------------------------------
@@ -26,13 +26,13 @@
 //   Please reports any sugestions and/or bugs to:     mihai.oltean@gmail.com
 //---------------------------------------------------------------------------
 
-//   Training data file must have the following format (see building1.txt and cancer1.txt):
+//   Training data file must have the following format (see building1.txt and cancer1.txt from datasets folder):
 //   building1 and cancer1 data were taken from PROBEN1
 
-//   x11 x12 ... x1n f1
-//   x21 x22 ....x2n f2
+//   x_11 x_12 ... x_1n f_1
+//   x_21 x_22 ....x_2n f_2
 //   .............
-//   xm1 xm2 ... xmn fm
+//   x_m1 x_m2 ... x_mn f_m
 
 //   where m is the number of training data
 //   and n is the number of variables.
@@ -43,20 +43,24 @@
 #include <math.h>
 #include <string.h>
 
+#define PROBLEM_REGRESSION 0
+#define PROBLEM_BINARY_CLASSIFICATION 1
+
 #define num_operators 4
 
-// +   -1
-// -   -2
-// *   -3
-// /   -4
+#define ADD_OP -1 // +
+#define DIF_OP -2 // -
+#define MUL_OP -3 // *
+#define DIV_OP -4 // /
+
 
 char operators_string[5] = "+-*/";
 
 //---------------------------------------------------------------------------
 struct t_code3{
-	int op;				// either a variable, operator or constant; 
-	// variables are indexed from 0: 0,1,2,...; 
-	// constants are indexed from num_variables
+	int op;				// either a variable, an operator or a constant 
+	// variables are indexed from 0: 0, 1, 2, ...;
+	// constants are indexed starting with num_variables index
 	// operators are -1, -2, -3...
 	int adr1, adr2;    // pointers to arguments
 };
@@ -142,7 +146,8 @@ bool get_next_field(char *start_sir, char list_separator, char* dest, int & size
 	return true;
 }
 // ---------------------------------------------------------------------------
-bool read_training_data(const char *filename, char list_separator, double **&training_data, double *&target, int &num_training_data, int &num_variables)
+bool read_training_data(const char *filename, char list_separator, 
+		double **&training_data, double *&target, int &num_training_data, int &num_variables)
 {
 	FILE* f = fopen(filename, "r");
 	if (!f)
@@ -184,13 +189,18 @@ bool read_training_data(const char *filename, char list_separator, double **&tra
 	return true;
 }
 //---------------------------------------------------------------------------
-void delete_data(double **&data, double *&target, int num_training_data)
+void delete_training_data(double **&data, double *&target, int num_training_data)
 {
-	if (data)
+	if (data) {
 		for (int i = 0; i < num_training_data; i++)
 			delete[] data[i];
-	delete[] data;
-	delete[] target;
+		delete[] data;
+		data = NULL;
+	}
+	if (target) {
+		delete[] target;
+		target = NULL;
+	}
 }
 //---------------------------------------------------------------------------
 void copy_individual(t_chromosome& dest, const t_chromosome& source, const t_parameters &params)
@@ -244,22 +254,22 @@ void compute_eval_matrix(t_chromosome &c, int code_length, int num_variables, in
 		bool is_error_case = false;// division by zero, other errors
 		switch (c.prg[i].op) {
 
-		case  -1:  // +
+		case  ADD_OP:  // +
 			for (int k = 0; k < num_training_data; k++)
 				eval_matrix[i][k] = eval_matrix[c.prg[i].adr1][k] + eval_matrix[c.prg[i].adr2][k];
 			break;
-		case  -2:  // -
+		case  DIF_OP:  // -
 			for (int k = 0; k < num_training_data; k++)
 				eval_matrix[i][k] = eval_matrix[c.prg[i].adr1][k] - eval_matrix[c.prg[i].adr2][k];
 
 			break;
-		case  -3:  // *
+		case  MUL_OP:  // *
 			for (int k = 0; k < num_training_data; k++)
 				eval_matrix[i][k] = eval_matrix[c.prg[i].adr1][k] * eval_matrix[c.prg[i].adr2][k];
 			break;
-		case  -4:  //  /
+		case  DIV_OP:  //  /
 			for (int k = 0; k < num_training_data; k++)
-				if (fabs(eval_matrix[c.prg[i].adr2][k]) < 1e-6) // a small constant
+				if (fabs(eval_matrix[c.prg[i].adr2][k]) < 1e-6) // avoid division by near zero values
 					is_error_case = true;
 			if (is_error_case) {                                           // an division by zero error occured !!!
 				c.prg[i].op = rand() % num_variables;   // the gene is mutated into a terminal
@@ -282,7 +292,8 @@ void compute_eval_matrix(t_chromosome &c, int code_length, int num_variables, in
 }
 //---------------------------------------------------------------------------
 // evaluate Individual
-void fitness_regression(t_chromosome &c, int code_length, int num_variables, int num_training_data, double **training_data, double *target, double **eval_matrix)
+void fitness_regression(t_chromosome &c, int code_length, int num_variables, int num_training_data, 
+		double **training_data, double *target, double **eval_matrix)
 {
 	c.fitness = 1e+308;
 	c.best_index = -1;
@@ -301,7 +312,8 @@ void fitness_regression(t_chromosome &c, int code_length, int num_variables, int
 	}
 }
 //---------------------------------------------------------------------------
-void fitness_classification(t_chromosome &c, int code_length, int num_variables, int num_training_data, double **training_data, double *target, double **eval_matrix)
+void fitness_classification(t_chromosome &c, int code_length, int num_variables, int num_training_data, 
+		double **training_data, double *target, double **eval_matrix)
 {
 	c.fitness = 1e+308;
 	c.best_index = -1;
@@ -456,10 +468,9 @@ void print_chromosome(const t_chromosome& a, const t_parameters &params, int num
 	printf("Fitness = %lf\n", a.fitness);
 }
 //---------------------------------------------------------------------------
-int tournament_selection(t_chromosome *a_sub_pop, int sub_pop_size, int tournament_size)     // Size is the size of the tournament
+int tournament_selection(const t_chromosome *a_sub_pop, int sub_pop_size, int tournament_size)     // Size is the size of the tournament
 {
-	int p;
-	p = rand() % sub_pop_size;
+	int p = rand() % sub_pop_size;
 	for (int i = 1; i < tournament_size; i++) {
 		int r = rand() % sub_pop_size;
 		p = a_sub_pop[r].fitness < a_sub_pop[p].fitness ? r : p;
@@ -487,13 +498,13 @@ void evolve_one_subpopulation(t_chromosome * a_sub_population, const t_parameter
 		}
 		// mutate the result and compute fitness
 		mutation(offspring1, params, num_variables);
-		if (params.problem_type == 0)
+		if (params.problem_type == PROBLEM_REGRESSION)
 			fitness_regression(offspring1, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
 		else
 			fitness_classification(offspring1, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
 		// mutate the other offspring too
 		mutation(offspring2, params, num_variables);
-		if (params.problem_type == 0)
+		if (params.problem_type == PROBLEM_REGRESSION)
 			fitness_regression(offspring2, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
 		else
 			fitness_classification(offspring2, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
@@ -511,7 +522,8 @@ void evolve_one_subpopulation(t_chromosome * a_sub_population, const t_parameter
 
 }
 //---------------------------------------------------------------------------
-void start_steady_state_mep(t_parameters &params, double **training_data, double* target, int num_training_data, int num_variables)       // Steady-State 
+void start_steady_state_mep(const t_parameters &params, double **training_data, double* target, 
+		int num_training_data, int num_variables)       // Steady-State 
 {
 	// a steady state model - 
 	// Newly created inviduals replace the worst ones (if the offspring are better) in the same (sub) population.
@@ -536,7 +548,7 @@ void start_steady_state_mep(t_parameters &params, double **training_data, double
 	for (int p = 0; p < params.num_sub_populations; p++)
 		for (int i = 0; i < params.sub_population_size; i++) {
 			generate_random_chromosome(sub_populations[p][i], params, num_variables);
-			if (params.problem_type == 0)
+			if (params.problem_type == PROBLEM_REGRESSION)
 				fitness_regression(sub_populations[p][i], params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
 			else
 				fitness_classification(sub_populations[p][i], params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
@@ -569,15 +581,16 @@ void start_steady_state_mep(t_parameters &params, double **training_data, double
 		// now copy one individual from one population to the next one.
 		// the copied invidual will replace the worst in the next one (if is better)
 
-		for (int p = 0; p < params.num_sub_populations; p++) {
-			int  k = rand() % params.sub_population_size;// the individual to be copied
-			// replace the worst in the next population (p + 1) - only if is better
-			int index_next_pop = (p + 1) % params.num_sub_populations; // index of the next subpopulation (taken in circular order)
-			if (sub_populations[p][k].fitness < sub_populations[index_next_pop][params.sub_population_size - 1].fitness) {
-				copy_individual(sub_populations[index_next_pop][params.sub_population_size - 1], sub_populations[p][k], params);
-				qsort((void *)sub_populations[index_next_pop], params.sub_population_size, sizeof(sub_populations[0][0]), sort_function);
+		if (params.num_sub_populations > 1) // only if we have more than one sub_population
+			for (int p = 0; p < params.num_sub_populations; p++) {
+				int  k = rand() % params.sub_population_size;// the individual to be copied
+				// replace the worst in the next population (p + 1) - only if is better
+				int index_next_pop = (p + 1) % params.num_sub_populations; // index of the next subpopulation (taken in circular order)
+				if (sub_populations[p][k].fitness < sub_populations[index_next_pop][params.sub_population_size - 1].fitness) {
+					copy_individual(sub_populations[index_next_pop][params.sub_population_size - 1], sub_populations[p][k], params);
+					qsort((void *)sub_populations[index_next_pop], params.sub_population_size, sizeof(sub_populations[0][0]), sort_function);
+				}
 			}
-		}
 
 	}
 		// print best chromosome
@@ -593,9 +606,6 @@ void start_steady_state_mep(t_parameters &params, double **training_data, double
 		delete[] sub_populations[p];
 	}
 	delete[] sub_populations;
-
-
-	delete_data(training_data, target, num_training_data);
 
 	delete_partial_expression_values(eval_matrix, params.code_length);
 }
@@ -618,7 +628,7 @@ int main(void)
 	params.constants_min = -1;
 	params.constants_max = 1;
 
-	params.problem_type = 0;             //0 - regression, 1 - classification; DONT FORGET TO SET IT
+	params.problem_type = PROBLEM_REGRESSION;             //0 - regression, 1 - classification; DONT FORGET TO SET IT
 	params.classification_threshold = 0; // only for classification problems
 
 	int num_training_data, num_variables;
@@ -633,6 +643,8 @@ int main(void)
 	srand(0);
 	printf("evolving...\n");
 	start_steady_state_mep(params, training_data, target, num_training_data, num_variables);
+
+	delete_training_data(training_data, target, num_training_data);
 
 	printf("Press enter ...");
 	getchar();
