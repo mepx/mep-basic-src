@@ -2,7 +2,7 @@
 //	Multi Expression Programming - basic source code for solving symbolic regression and binary classification problems
 //	author: Mihai Oltean  
 //	mihai.oltean@gmail.com
-//	Last update on: 2021.11.25
+//	Last update on: 2021.11.26
 
 //	License: MIT
 //---------------------------------------------------------------------------
@@ -43,14 +43,19 @@
 // *   -3
 // /   -4
 
+#define ADD_OP -1
+#define DIF_OP -2
+#define MUL_OP -3
+#define DIV_OP -4
+
 char operators_string[5] = "+-*/";
 
 //---------------------------------------------------------------------------
 struct t_code3{
-	int op;				// either a variable, operator or constant; 
-	// variables are indexed from 0: 0,1,2,...; 
-	// constants are indexed from num_variables
-	// operators are -1, -2, -3...
+	int op;				// either a variable, an operator or a constant
+	// variables are indexed from 0: 0, 1, 2, ...
+	// constants are indexed from num_variables; the first constant has index num_variables
+	// operators are stored as negative numbers -1, -2, -3...
 	int addr1, addr2;    // pointers to arguments
 };
 //---------------------------------------------------------------------------
@@ -107,7 +112,8 @@ void allocate_training_data(double **&data, double *&target, int num_training_da
 }
 //---------------------------------------------------------------------------
 void allocate_partial_expression_values(double **&expression_value, int num_training_data, int code_length)
-{
+{// allocate memory for the matrix storing the output of each expression for each training data
+	// this is allocated once and then reused, in order to reduce the number of allocations/deletions
 	expression_value = new double*[code_length];
 	for (int i = 0; i < code_length; i++)
 		expression_value[i] = new double[num_training_data];
@@ -122,7 +128,7 @@ void delete_partial_expression_values(double **&expression_value, int code_lengt
 	}
 }
 //---------------------------------------------------------------------------
-void delete_data(double **&data, double *&target, int num_training_data)
+void delete_training_data(double **&data, double *&target, int num_training_data)
 {
 	if (data)
 		for (int i = 0; i < num_training_data; i++)
@@ -174,7 +180,8 @@ void generate_random_chromosome(t_mep_chromosome &a, t_mep_parameters &params, i
 	}
 }
 //---------------------------------------------------------------------------
-void compute_eval_matrix(t_mep_chromosome &c, int code_length, int num_variables, int num_training_data, double **training_data, double **eval_matrix)
+void compute_eval_matrix(const t_mep_chromosome &c, int code_length, int num_variables, int num_training_data, 
+		const double **training_data, double **eval_matrix)
 {
 	// we keep intermediate values in a matrix because when an error occurs (like division by 0) we mutate that gene into a variables.
 	// in such case it is faster to have all intermediate results until current gene, so that we don't have to recompute them again.
@@ -183,22 +190,22 @@ void compute_eval_matrix(t_mep_chromosome &c, int code_length, int num_variables
 		bool is_error_case = false;// division by zero, other errors
 		switch (c.code[i].op) {
 
-		case  -1:  // +
+		case  ADD_OP:  // +
 			for (int k = 0; k < num_training_data; k++)
 				eval_matrix[i][k] = eval_matrix[c.code[i].addr1][k] + eval_matrix[c.code[i].addr2][k];
 			break;
-		case  -2:  // -
+		case  DIF_OP:  // -
 			for (int k = 0; k < num_training_data; k++)
 				eval_matrix[i][k] = eval_matrix[c.code[i].addr1][k] - eval_matrix[c.code[i].addr2][k];
 
 			break;
-		case  -3:  // *
+		case  MUL_OP:  // *
 			for (int k = 0; k < num_training_data; k++)
 				eval_matrix[i][k] = eval_matrix[c.code[i].addr1][k] * eval_matrix[c.code[i].addr2][k];
 			break;
-		case  -4:  //  /
+		case  DIV_OP:  //  /
 			for (int k = 0; k < num_training_data; k++)
-				if (fabs(eval_matrix[c.code[i].addr2][k]) < 1e-6) // a small constant
+				if (fabs(eval_matrix[c.code[i].addr2][k]) < 1e-6) // test if it is too small
 					is_error_case = true;
 			if (is_error_case) {                                           // an division by zero error occured !!!
 				c.code[i].op = rand() % num_variables;   // the gene is mutated into a terminal
@@ -220,7 +227,8 @@ void compute_eval_matrix(t_mep_chromosome &c, int code_length, int num_variables
 	}
 }
 //---------------------------------------------------------------------------
-void fitness_regression(t_mep_chromosome &c, int code_length, int num_variables, int num_training_data, const double **training_data, const double *target, double **eval_matrix)
+void fitness_regression(t_mep_chromosome &c, int code_length, int num_variables, int num_training_data, 
+			const double **training_data, const double *target, double **eval_matrix)
 {
 	c.fitness = 1e+308;
 	c.best_index = -1;
@@ -239,12 +247,13 @@ void fitness_regression(t_mep_chromosome &c, int code_length, int num_variables,
 	}
 }
 //---------------------------------------------------------------------------
-void fitness_classification(t_mep_chromosome &c, int code_length, int num_variables, int num_training_data, double **training_data, double *target, double **eval_matrix)
+void fitness_classification(t_mep_chromosome &c, int code_length, int num_variables, int num_training_data, 
+		const double **training_data, const double *target, double **eval_matrix)
 {
 	c.fitness = 1e+308;
 	c.best_index = -1;
 
-	compute_eval_matrix(c, code_length, num_variables, num_training_data, training_data, eval_matrix);
+	compute_eval_matrix(c, code_length, num_variables, num_training_data, training_data, eval_matrix);// compute the output of each expression
 
 	for (int i = 0; i < code_length; i++) {   // read the chromosome from top to down
 		int count_incorrect_classified = 0;
@@ -261,7 +270,8 @@ void fitness_classification(t_mep_chromosome &c, int code_length, int num_variab
 	}
 }
 //---------------------------------------------------------------------------
-void mutation(t_mep_chromosome &a_chromosome, t_mep_parameters params, int num_variables) // mutate the individual
+void mutation(t_mep_chromosome &a_chromosome, const t_mep_parameters &params, int num_variables) 
+// mutate the individual
 {
 	// mutate each symbol with the given probability
 	// first gene must be a variable or constant
@@ -388,18 +398,20 @@ void print_chromosome(const t_mep_chromosome& a, const t_mep_parameters &params,
 	printf("Fitness = %lf\n", a.fitness);
 }
 //---------------------------------------------------------------------------
-int tournament_selection(t_mep_chromosome *pop, int pop_size, int tournament_size)     // Size is the size of the tournament
+int tournament_selection(const t_mep_chromosome *population, int pop_size, int tournament_size)     
+// Size parameter is the size of the tournament
 {
 	int p;
 	p = rand() % pop_size;
 	for (int i = 1; i < tournament_size; i++) {
 		int r = rand() % pop_size;
-		p = pop[r].fitness < pop[p].fitness ? r : p;
+		p = population[r].fitness < population[p].fitness ? r : p;
 	}
 	return p;
 }
 //---------------------------------------------------------------------------
-void start_steady_state_mep(t_mep_parameters &params, double **training_data, double* target, int num_training_data, int num_variables)       // Steady-State 
+void start_steady_state_mep(t_mep_parameters &params, const double **training_data, const double* target, 
+			int num_training_data, int num_variables) 
 {
 	// a steady state approach:
 	// we work with 1 population
@@ -578,10 +590,10 @@ int main(void)
 		return 1;
 	}
 
-	srand(0);
+	srand(0);// random seed
 
 	clock_t start_time = clock();
-
+	// run MEP
 	start_steady_state_mep(params, training_data, target, num_training_data, num_variables);
 
 	clock_t end_time = clock();
@@ -590,7 +602,7 @@ int main(void)
 
 	printf("Running time = %lf\n", running_time);
 
-	delete_data(training_data, target, num_training_data);
+	delete_training_data(training_data, target, num_training_data);
 
 	printf("Press enter ...");
 	getchar();
