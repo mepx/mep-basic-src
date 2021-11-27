@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 //   Multi Expression Programming - multi class classification
 //   Author: Mihai Oltean  (mihai.oltean@gmail.com)
-//   Version 2021.11.25
+//   Version 2021.11.27
 
 //   License: MIT
 //---------------------------------------------------------------------------
@@ -253,13 +253,15 @@ bool read_training_data_from_proben1_format(const char *filename, char list_sepa
 	return true;
 }
 //---------------------------------------------------------------------------
-void delete_data(double **&data, double *&target, int num_training_data)
+void delete_training_data(double **&data, double *&target, int num_training_data)
 {
-	if (data)
+	if (data) {
 		for (int i = 0; i < num_training_data; i++)
 			delete[] data[i];
-	delete[] data;
-	delete[] target;
+		delete[] data;
+	}
+	if (target)
+		delete[] target;
 }
 //---------------------------------------------------------------------------
 void copy_individual(t_chromosome& dest, const t_chromosome& source, const t_parameters &params)
@@ -304,7 +306,8 @@ void generate_random_chromosome(t_chromosome &a, const t_parameters &params, int
 	}
 }
 //---------------------------------------------------------------------------
-void compute_eval_matrix(const t_chromosome &c, int code_length, int num_variables, int num_training_data, double **training_data, double *target, double **eval_matrix)
+void compute_eval_matrix(const t_chromosome &c, int code_length, int num_variables, int num_training_data, 
+	double **training_data, double *target, double **eval_matrix)
 {
 	// we keep intermediate values in a matrix because when an error occurs (like division by 0) we mutate that gene into a variables.
 	// in such case it is faster to have all intermediate results until current gene, so that we don't have to recompute them again.
@@ -360,7 +363,8 @@ void compute_eval_matrix(const t_chromosome &c, int code_length, int num_variabl
 }
 //---------------------------------------------------------------------------
 // evaluate Individual
-void fitness_regression(t_chromosome &c, int code_length, int num_variables, int num_training_data, double **training_data, double *target, double **eval_matrix)
+void fitness_regression(t_chromosome &c, int code_length, int num_variables, int num_training_data, 
+	double **training_data, double *target, double **eval_matrix)
 {
 	c.fitness = 1e+308;
 	c.best_index = -1;
@@ -379,7 +383,8 @@ void fitness_regression(t_chromosome &c, int code_length, int num_variables, int
 	}
 }
 //---------------------------------------------------------------------------
-void fitness_classification(t_chromosome &c, int code_length, int num_variables, int num_classes, int num_training_data, double **training_data, double *target, double **eval_matrix)
+void fitness_classification(t_chromosome &c, int code_length, int num_variables, int num_classes, int num_training_data, 
+	double **training_data, double *target, double **eval_matrix)
 {
 /*
     compute_eval_matrix(c, code_length, num_variables, num_training_data, training_data, target, eval_matrix);
@@ -435,7 +440,8 @@ int sort_function_value_class(const void *a, const void *b)
 			return 0;
 }
 //---------------------------------------------------------------------------
-void fitness_classification2(t_chromosome &c, int code_length, int num_variables, int num_classes, int num_training_data, double **training_data, double *target, double **eval_matrix)
+void fitness_classification2(t_chromosome &c, int code_length, int num_variables, int num_classes, int num_training_data, 
+	double **training_data, double *target, double **eval_matrix)
 {
 	c.fitness = DBL_MAX;
 	compute_eval_matrix(c, code_length, num_variables, num_training_data, training_data, target, eval_matrix);
@@ -483,7 +489,8 @@ void fitness_classification2(t_chromosome &c, int code_length, int num_variables
 	delete[] occurences;
 }
 //---------------------------------------------------------------------------
-void fitness_classification3(t_chromosome &c, int code_length, int num_variables, int num_classes, int num_training_data, double **training_data, double *target, double **eval_matrix)
+void fitness_classification3(t_chromosome &c, int code_length, int num_variables, int num_classes, int num_training_data, 
+	double **training_data, double *target, double **eval_matrix)
 {
 	c.fitness = DBL_MAX;
 	compute_eval_matrix(c, code_length, num_variables, num_training_data, training_data, target, eval_matrix);
@@ -568,7 +575,8 @@ void mutation(t_chromosome &a_chromosome, const t_parameters &params, int num_va
 
 }
 //---------------------------------------------------------------------------
-void one_cut_point_crossover(const t_chromosome &parent1, const t_chromosome &parent2, const t_parameters &params, t_chromosome &offspring1, t_chromosome &offspring2)
+void one_cut_point_crossover(const t_chromosome &parent1, const t_chromosome &parent2, 
+	const t_parameters &params, t_chromosome &offspring1, t_chromosome &offspring2)
 {
 	int cutting_pct = rand() % params.code_length;
 	for (int i = 0; i < cutting_pct; i++) {
@@ -593,7 +601,8 @@ void one_cut_point_crossover(const t_chromosome &parent1, const t_chromosome &pa
 	}
 }
 //---------------------------------------------------------------------------
-void uniform_crossover(const t_chromosome &parent1, const t_chromosome &parent2, const t_parameters &params, t_chromosome &offspring1, t_chromosome &offspring2)
+void uniform_crossover(const t_chromosome &parent1, const t_chromosome &parent2, const t_parameters &params, 
+	t_chromosome &offspring1, t_chromosome &offspring2)
 {
 	for (int i = 0; i < params.code_length; i++)
 		if (rand() % 2) {
@@ -653,8 +662,7 @@ void print_chromosome(const t_chromosome& a, const t_parameters &params, int num
 //---------------------------------------------------------------------------
 int tournament_selection(const t_chromosome *pop, int pop_size, int tournament_size)     // Size is the size of the tournament
 {
-	int p;
-	p = rand() % pop_size;
+	int p = rand() % pop_size;
 	for (int i = 1; i < tournament_size; i++) {
 		int r = rand() % pop_size;
 		p = pop[r].fitness < pop[p].fitness ? r : p;
@@ -662,7 +670,8 @@ int tournament_selection(const t_chromosome *pop, int pop_size, int tournament_s
 	return p;
 }
 //---------------------------------------------------------------------------
-void start_steady_state_mep(const t_parameters &params, double **training_data, double* target, int num_training_data, int num_variables)       // Steady-State 
+void start_steady_state_mep(const t_parameters &params, double **training_data, double* target, 
+	int num_training_data, int num_variables)       // Steady-State 
 {
 	// a steady state approach:
 	// we work with 1 population
@@ -744,8 +753,6 @@ void start_steady_state_mep(const t_parameters &params, double **training_data, 
 		delete_chromosome(population[i]);
 	delete[] population;
 
-	delete_data(training_data, target, num_training_data);
-
 	delete_partial_expression_values(eval_matrix, params.code_length);
 }
 //--------------------------------------------------------------------
@@ -793,6 +800,7 @@ int main(void)
 
 	srand(0);
 	start_steady_state_mep(params, training_data, target, num_training_data, num_variables);
+	delete_training_data(training_data, target, num_training_data);
 
 	printf("Press enter ...");
 	getchar();
