@@ -2,7 +2,7 @@
 //	Multi Expression Programming - basic source code for solving symbolic regression and binary classification problems
 //	author: Mihai Oltean  
 //	mihai.oltean@gmail.com
-//	Last update on: 2021.11.26
+//	Last update on: 2021.11.27
 
 //	License: MIT
 //---------------------------------------------------------------------------
@@ -17,18 +17,18 @@
 
 //   Please reports any sugestions and/or bugs to mihai.oltean@gmail.com
 
-//   Training data file must have the following format (see building1.txt and cancer1.txt):
-//   building1 and cancer1 data were taken from PROBEN1
+//   Training data file must have the following format (see building1.txt and cancer1.txt from the dataset folder):
+//   Note that building1 and cancer1 data were taken from PROBEN1
 
-//   x11 x12 ... x1n f1
-//   x21 x22 ....x2n f2
+//   x_11 x_12 ... x_1n f_1
+//   x_21 x_22 ....x_2n f_2
 //   .............
-//   xm1 xm2 ... xmn fm
+//   x_m1 x_m2 ... x_mn f_m
 
 //   where m is the number of training data
 //   and n is the number of variables.
-//   xij are the inputs
-//   fi are the outputs
+//   x_ij are the inputs
+//   f_i are the outputs
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,17 +36,15 @@
 #include <string.h>
 #include <time.h>
 
+#define PROBLEM_REGRESSION 0
+#define PROBLEM_BINARY_CLASSIFICATION 1
+
 #define num_operators 4
 
-// +   -1
-// -   -2
-// *   -3
-// /   -4
-
-#define ADD_OP -1
-#define DIF_OP -2
-#define MUL_OP -3
-#define DIV_OP -4
+#define ADD_OP -1 // +
+#define DIF_OP -2 // -
+#define MUL_OP -3 // *
+#define DIV_OP -4 // /
 
 char operators_string[5] = "+-*/";
 
@@ -84,9 +82,9 @@ struct t_mep_parameters{
 //---------------------------------------------------------------------------
 void allocate_chromosome(t_mep_chromosome &c, const t_mep_parameters &params)
 {
-	c.code = new t_code3[params.code_length];
+	c.code = new t_code3[params.code_length];// the code
 	if (params.num_constants)
-		c.constants = new double[params.num_constants];
+		c.constants = new double[params.num_constants];// constants
 	else
 		c.constants = NULL;
 }
@@ -433,7 +431,7 @@ void start_steady_state_mep(t_mep_parameters &params, const double **training_da
 	// initialize
 	for (int i = 0; i < params.pop_size; i++) {
 		generate_random_chromosome(population[i], params, num_variables);
-		if (params.problem_type == 0)
+		if (params.problem_type == PROBLEM_REGRESSION)
 			fitness_regression(population[i], params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
 		else
 			fitness_classification(population[i], params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
@@ -459,13 +457,13 @@ void start_steady_state_mep(t_mep_parameters &params, const double **training_da
 			}
 			// mutate the result and compute fitness
 			mutation(offspring1, params, num_variables);
-			if (params.problem_type == 0)
+			if (params.problem_type == PROBLEM_REGRESSION)
 				fitness_regression(offspring1, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
 			else
 				fitness_classification(offspring1, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
 			// mutate the other offspring and compute fitness
 			mutation(offspring2, params, num_variables);
-			if (params.problem_type == 0)
+			if (params.problem_type == PROBLEM_REGRESSION)
 				fitness_regression(offspring2, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
 			else
 				fitness_classification(offspring2, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
@@ -578,7 +576,7 @@ int main(void)
 	params.constants_min = -1;
 	params.constants_max = 1;
 
-	params.problem_type = 0;             //0 - regression, 1 - classification; DONT FORGET TO SET IT
+	params.problem_type = PROBLEM_REGRESSION;             //0 - regression, 1 - classification; DONT FORGET TO SET IT
 	params.classification_threshold = 0; // only for classification problems
 
 	int num_training_data, num_variables;
@@ -594,7 +592,7 @@ int main(void)
 
 	clock_t start_time = clock();
 	// run MEP
-	start_steady_state_mep(params, training_data, target, num_training_data, num_variables);
+	start_steady_state_mep(params, (const double**)training_data, (const double*)target, num_training_data, num_variables);
 
 	clock_t end_time = clock();
 
