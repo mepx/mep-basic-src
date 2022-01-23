@@ -146,7 +146,7 @@ void copy_individual(t_mep_chromosome& dest, const t_mep_chromosome& source, con
 	dest.best_index = source.best_index;
 }
 //---------------------------------------------------------------------------
-void generate_random_chromosome(t_mep_chromosome &a, t_mep_parameters &params, int num_variables) 
+void generate_random_chromosome(t_mep_chromosome &a, const t_mep_parameters &params, int num_variables) 
 // randomly initializes the individuals
 {
 	// generate constants first
@@ -179,8 +179,9 @@ void generate_random_chromosome(t_mep_chromosome &a, t_mep_parameters &params, i
 	}
 }
 //---------------------------------------------------------------------------
-void compute_eval_matrix(const t_mep_chromosome &c, int code_length, int num_variables, int num_training_data, 
-		const double **training_data, double **eval_matrix)
+void compute_eval_matrix(const t_mep_chromosome &c, int code_length, int num_variables,
+	int num_training_data, 	const double **training_data, 
+	double **eval_matrix)
 {
 	// we keep intermediate values in a matrix because when an error occurs (like division by 0) we mutate that gene into a variables.
 	// in such case it is faster to have all intermediate results until current gene, so that we don't have to recompute them again.
@@ -214,6 +215,10 @@ void compute_eval_matrix(const t_mep_chromosome &c, int code_length, int num_var
 			else    // normal execution....
 				for (int k = 0; k < num_training_data; k++)
 					eval_matrix[i][k] = eval_matrix[c.code[i].addr1][k] / eval_matrix[c.code[i].addr2][k];
+			break;
+		case  SIN_OP:  // sin
+			for (int k = 0; k < num_training_data; k++)
+				eval_matrix[i][k] = sin(eval_matrix[c.code[i].addr1][k]);
 			break;
 		default:  // a variable
 			for (int k = 0; k < num_training_data; k++)
@@ -318,7 +323,8 @@ void mutation(t_mep_chromosome &a_chromosome, const t_mep_parameters &params, in
 
 }
 //---------------------------------------------------------------------------
-void one_cut_point_crossover(const t_mep_chromosome &parent1, const t_mep_chromosome &parent2, const t_mep_parameters &params, t_mep_chromosome &offspring1, t_mep_chromosome &offspring2)
+void one_cut_point_crossover(const t_mep_chromosome &parent1, const t_mep_chromosome &parent2, 
+	const t_mep_parameters &params, t_mep_chromosome &offspring1, t_mep_chromosome &offspring2)
 {
 	int cutting_pct = rand() % params.code_length;
 	for (int i = 0; i < cutting_pct; i++) {
@@ -385,7 +391,7 @@ void print_chromosome(const t_mep_chromosome& a, const t_mep_parameters &params,
 	for (int i = 0; i < params.num_constants; i++)
 		printf("constants[%d] = %lf\n", i, a.constants[i]);
 
-	for (int i = 0; i < params.code_length; i++)
+	for (int i = 0; i < params.code_length; i++) {
 		if (a.code[i].op < 0) {
 			if (a.code[i].op == SIN_OP)
 				printf("%d: sin %d\n", i, a.code[i].addr1);
@@ -398,8 +404,9 @@ void print_chromosome(const t_mep_chromosome& a, const t_mep_parameters &params,
 			else
 				printf("%d: constants[%d]\n", i, a.code[i].op - num_variables);
 		}
+	}
 	printf("//------------------------------------------\n");
-	printf("best index = %d\n", a.best_index);
+	printf("Best index (output provider) = %d\n", a.best_index);
 	printf("Fitness = %lf\n", a.fitness);
 }
 //---------------------------------------------------------------------------
@@ -571,7 +578,7 @@ int main(void)
 
 	params.pop_size = 100;						    // the number of individuals in population  (must be an even number!)
 	params.code_length = 50;
-	params.num_generations = 100;					// the number of generations
+	params.num_generations = 200;					// the number of generations
 	params.mutation_probability = 0.1;              // mutation probability
 	params.crossover_probability = 0.9;             // crossover probability
 
@@ -607,7 +614,7 @@ int main(void)
 
 	double running_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
 
-	printf("Running time = %lf\n", running_time);
+	printf("Running time = %lf seconds\n", running_time);
 
 	delete_training_data(training_data, target, num_training_data);
 
