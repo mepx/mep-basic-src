@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 //   Multi Expression Programming - multi class classification
 //   Author: Mihai Oltean  (mihai.oltean@gmail.com)
-//   Version 2021.11.27
+//   Version 2022.1.23
 
 //   License: MIT
 //---------------------------------------------------------------------------
@@ -332,8 +332,10 @@ void compute_eval_matrix(const t_chromosome &c, int code_length, int num_variabl
 			break;
 		case  -4:  //  /
 			for (int k = 0; k < num_training_data; k++)
-				if (fabs(eval_matrix[c.prg[i].adr2][k]) < 1e-6) // a small constant
+				if (fabs(eval_matrix[c.prg[i].adr2][k]) < 1e-6) { // a small constant
 					is_error_case = true;
+					break;
+				}
 			if (is_error_case) {                                           // an division by zero error occured !!!
 				c.prg[i].op = rand() % num_variables;   // the gene is mutated into a terminal
 				for (int k = 0; k < num_training_data; k++)
@@ -349,7 +351,18 @@ void compute_eval_matrix(const t_chromosome &c, int code_length, int num_variabl
 			break;
 		case  -6:  // asin
 			for (int k = 0; k < num_training_data; k++)
-				eval_matrix[i][k] = asin(eval_matrix[c.prg[i].adr1][k]);
+				if (eval_matrix[c.prg[i].adr1][k] < -1 || eval_matrix[c.prg[i].adr1][k] > 1) {
+					is_error_case = true;
+					break;
+				}
+			if (is_error_case) {                                           // an division by zero error occured !!!
+				c.prg[i].op = rand() % num_variables;   // the gene is mutated into a terminal
+				for (int k = 0; k < num_training_data; k++)
+					eval_matrix[i][k] = training_data[k][c.prg[i].op];
+			}
+			else    // normal execution....
+				for (int k = 0; k < num_training_data; k++)
+					eval_matrix[i][k] = asin(eval_matrix[c.prg[i].adr1][k]);
 			break;
 		default:  // a variable
 			for (int k = 0; k < num_training_data; k++)
@@ -362,7 +375,7 @@ void compute_eval_matrix(const t_chromosome &c, int code_length, int num_variabl
 	}
 }
 //---------------------------------------------------------------------------
-// evaluate Individual
+// evaluate the individual c
 void fitness_regression(t_chromosome &c, int code_length, int num_variables, int num_training_data, 
 	double **training_data, double *target, double **eval_matrix)
 {
@@ -386,26 +399,6 @@ void fitness_regression(t_chromosome &c, int code_length, int num_variables, int
 void fitness_classification(t_chromosome &c, int code_length, int num_variables, int num_classes, int num_training_data, 
 	double **training_data, double *target, double **eval_matrix)
 {
-/*
-    compute_eval_matrix(c, code_length, num_variables, num_training_data, training_data, target, eval_matrix);
-
-	int count_incorrect_classified = 0;
-
-    for (int t = 0; t < num_training_data; t++) {
-		// find the maximal value
-		double max_val = -eval_matrix[0][t];
-		int max_index = 0;
-		for (int i = 1; i < code_length; i++)
-			if (max_val < eval_matrix[i][t] - 1E-6) {
-				max_val = eval_matrix[i][t];
-				max_index = i;
-			}
-		if (fabs(max_index % num_classes - target[t]) > 1E-6)
-			count_incorrect_classified++;
-	}
-	c.fitness = count_incorrect_classified;
- */
-
     compute_eval_matrix(c, code_length, num_variables, num_training_data, training_data, target, eval_matrix);
     
     int count_incorrect_classified = 0;
@@ -418,7 +411,6 @@ void fitness_classification(t_chromosome &c, int code_length, int num_variables,
         for (int i = 0; i < code_length; i++)
             if (eval_matrix[i][t] > 0)
                 num_positives++;
-        
         
         int class_index = num_positives / num_positives_per_class;
         
@@ -450,37 +442,36 @@ void fitness_classification2(t_chromosome &c, int code_length, int num_variables
 	int *occurences = new int[num_classes];
 
 	for (int i = 0; i < code_length; i++) {   // read the t_mep_chromosome from top to down
-			for (int k = 0; k < num_training_data; k++) {
-				tmp_value_class[k].value = eval_matrix[i][k];
-				tmp_value_class[k].data_class = (int)target[k];
-			}
-			qsort((void*)tmp_value_class, num_training_data, sizeof(t_value_class), sort_function_value_class);
+		for (int k = 0; k < num_training_data; k++) {
+			tmp_value_class[k].value = eval_matrix[i][k];
+			tmp_value_class[k].data_class = (int)target[k];
+		}
+		qsort((void*)tmp_value_class, num_training_data, sizeof(t_value_class), sort_function_value_class);
 
-			int num_incorrect = 0;
+		int num_incorrect = 0;
 
+		for (int t = 0; t < num_classes; t++) {
+			for (int j = 0; j < num_classes; j++)
+				occurences[j] = 0;
+			// find the class appearing the biggest number of times here
+			int num_items_per_region = num_training_data / num_classes;
+			for (int j = 0; j < num_items_per_region; j++)
+				occurences[tmp_value_class[t * num_items_per_region + j].data_class]++;
 
-			for (int t = 0; t < num_classes; t++) {
-				for (int j = 0; j < num_classes; j++)
-					occurences[j] = 0;
-				// find the class appearing the biggest number of times here
-				int num_items_per_region = num_training_data / num_classes;
-				for (int j = 0; j < num_items_per_region; j++)
-					occurences[tmp_value_class[t * num_items_per_region + j].data_class]++;
+			// find the largest one
+			int max_o = occurences[0];
+			//int max_c = 0; // class index
+			for (int j = 1; j < num_classes; j++)
+				if (max_o < occurences[j]) {
+					max_o = occurences[j];
+				//	max_c = j;
+				}
+			// max_c is the largest class there; everything else is incorrectly classified
+			num_incorrect += num_items_per_region - max_o;
+		}
 
-				// find the largest one
-				int max_o = occurences[0];
-				//int max_c = 0; // class index
-				for (int j = 1; j < num_classes; j++)
-					if (max_o < occurences[j]) {
-						max_o = occurences[j];
-					//	max_c = j;
-					}
-				// max_c is the largest class there; everything else is incorrectly classified
-				num_incorrect += num_items_per_region - max_o;
-			}
-
-			if (c.fitness > num_incorrect) {
-				c.fitness = num_incorrect;
+		if (c.fitness > num_incorrect) {
+			c.fitness = num_incorrect;
 			c.best_index = i;
 		}
 	}
@@ -601,7 +592,8 @@ void one_cut_point_crossover(const t_chromosome &parent1, const t_chromosome &pa
 	}
 }
 //---------------------------------------------------------------------------
-void uniform_crossover(const t_chromosome &parent1, const t_chromosome &parent2, const t_parameters &params, 
+void uniform_crossover(const t_chromosome &parent1, const t_chromosome &parent2, 
+	const t_parameters &params, 
 	t_chromosome &offspring1, t_chromosome &offspring2)
 {
 	for (int i = 0; i < params.code_length; i++)
@@ -647,14 +639,14 @@ void print_chromosome(const t_chromosome& a, const t_parameters &params, int num
 	for (int i = 0; i < params.code_length; i++)
 		if (a.prg[i].op < 0)
 			printf("%d: %c %d %d\n", i, operators_string[abs(a.prg[i].op) - 1], a.prg[i].adr1, a.prg[i].adr2);
-		else
+		else {
 			if (a.prg[i].op < num_variables)
 				printf("%d: inputs[%d]\n", i, a.prg[i].op);
 			else
 				printf("%d: constants[%d]\n", i, a.prg[i].op - num_variables);
-
+		}
 	if (params.problem_type == PROBLEM_TYPE_REGRESSION)
-	  printf("best index = %d\n", a.best_index);
+		printf("best index = %d\n", a.best_index);
 	// for classification problems we don't have the best index.
 
 	printf("Fitness = %lf\n", a.fitness);
@@ -704,7 +696,7 @@ void start_steady_state_mep(const t_parameters &params, double **training_data, 
 
 	printf("generation %d, best fitness = %lf\n", 0, population[0].fitness);
 
-	for (int g = 1; g < params.num_generations; g++) {// for each generation
+	for (int generation = 1; generation < params.num_generations; generation++) {// for each generation
 		for (int k = 0; k < params.pop_size; k += 2) {
 			// choose the parents using binary tournament
 			int r1 = tournament_selection(population, params.pop_size, 2);
@@ -740,7 +732,7 @@ void start_steady_state_mep(const t_parameters &params, double **training_data, 
 				qsort((void *)population, params.pop_size, sizeof(population[0]), sort_function);
 			}
 		}
-		printf("generation %d, best fitness = %lf\n", g, population[0].fitness);
+		printf("generation %d, best fitness = %lf\n", generation, population[0].fitness);
 	}
 	// print best chromosome
 	print_chromosome(population[0], params, num_variables);
@@ -760,38 +752,31 @@ int main(void)
 {
 	t_parameters params;
 
-	params.pop_size = 20;						    // the number of individuals in population  (must be an even number!)
-	params.code_length = 1000;
+	params.pop_size = 200;						    // the number of individuals in population  (must be an even number!)
+	params.code_length = 100;
 	params.num_generations = 1000;					// the number of generations
-	params.mutation_probability = 0.001;              // mutation probability
+	params.mutation_probability = 0.01;              // mutation probability
 	params.crossover_probability = 0.9;             // crossover probability
 
 	params.variables_probability = 0.6;
 	params.operators_probability = 0.4;
 	params.constants_probability = 1 - params.variables_probability - params.operators_probability; // sum of variables_prob + operators_prob + constants_prob MUST BE 1 !
 
-	params.num_constants = 5;   // use 3 constants from -1 ... +1 interval
+	params.num_constants = 5;   // use 5 constants from 0 ... +1 interval
 	params.constants_min = 0;
 	params.constants_max = 1;
 
 	params.problem_type = PROBLEM_TYPE_CLASSIFICATION;    //0 - regression, 1 - classification; DONT FORGET TO SET IT
-	params.num_classes = 10;     // MUST specify the number of classes
+	params.num_classes = 3;     // MUST specify the number of classes
 
 	int num_training_data, num_variables;
 	double** training_data, *target;
 	char error_msg[1000];
 	error_msg[0] = 0;
-	/*
-	// format used by gene1.dt file
-	if (!read_training_data_from_proben1_format("", ' ', params.num_classes, training_data, target, num_training_data, num_variables, error_msg)) {
-		printf(error_msg);
-		getchar();
-		return 1;
-	}
-     */
+
 	
 	// format used by cancer1.txt and iris.txt and building1.txt files
-	if (!read_training_data("c:/mihai/Dropbox/mep/mepx-data-projects/mnist-test.txt", ' ', training_data, target, num_training_data, num_variables, error_msg)) {
+	if (!read_training_data("c:/mihai/Dropbox/mep/mepx-data-projects/iris.txt", ' ', training_data, target, num_training_data, num_variables, error_msg)) {
 		printf(error_msg);
 		getchar();
 		return 1;
