@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 //   Multi Expression Programming Software - with multiple subpopulations
 //   Author: Mihai Oltean (mihai.oltean@gmail.com)
-//   Version: 2021.11.27
+//   Version: 2022.1.23
 
 //   License: MIT
 //---------------------------------------------------------------------------
@@ -66,7 +66,7 @@ struct t_code3{
 };
 //---------------------------------------------------------------------------
 struct t_mep_chromosome{
-	t_code3 *prg;        // the program - a string of genes
+	t_code3 *prg;        // the program - a string of genes (instructions)
 	double *constants; // an array of constants
 
 	double fitness;        // the fitness (or the error)
