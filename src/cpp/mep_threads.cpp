@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 //   Multi Expression Programming Software - with multiple subpopulations and threads
 //   Author: Mihai Oltean  (mihai.oltean@gmail.com)
-//   Version: 2021.11.25.0
+//   Version: 2022.1.23.0
 
 //   License: MIT
 //---------------------------------------------------------------------------
