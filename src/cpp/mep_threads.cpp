@@ -304,7 +304,7 @@ void compute_eval_matrix(t_chromosome &c,
 	}
 }
 //---------------------------------------------------------------------------
-// evaluate Individual
+// evaluate the chromosome c
 void fitness_regression(t_chromosome &c, int code_length, int num_variables, 
 		int num_training_data, const double **training_data, const double *target, 
 		double **eval_matrix)
@@ -326,19 +326,19 @@ void fitness_regression(t_chromosome &c, int code_length, int num_variables,
 	}
 }
 //---------------------------------------------------------------------------
-void fitness_binary_classification(t_chromosome &c, int code_length, int num_variables, int num_training_data, 
+void fitness_binary_classification(t_chromosome &c, const t_parameters& params, int num_variables, int num_training_data, 
 		const double **training_data, const double *target, 
 		double **eval_matrix)
 {
 	c.fitness = 1e+308;
 	c.best_instruction_index = -1;
 
-	compute_eval_matrix(c, code_length, num_variables, num_training_data, training_data, target, eval_matrix);
+	compute_eval_matrix(c, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
 
-	for (int i = 0; i < code_length; i++) {   // read the chromosome from top to down
+	for (int i = 0; i < params.code_length; i++) {   // read the chromosome from top to down
 		int count_incorrect_classified = 0;
 		for (int k = 0; k < num_training_data; k++)
-			if (eval_matrix[i][k] < 0) // the program tells me that this data is in class 0
+			if (eval_matrix[i][k] < params.classification_threshold) // the program tells me that this data is in class 0
 				count_incorrect_classified += (int)target[k];
 			else // the program tells me that this data is in class 1
 				count_incorrect_classified += (int)fabs(1 - target[k]);// difference between obtained and expected
@@ -373,11 +373,12 @@ void mutation(t_chromosome &a_chromosome, const t_parameters& params, int num_va
 
 			if (p <= params.operators_probability)
 				a_chromosome.prg[i].op = -rand() % num_operators - 1;
-			else
+			else {
 				if (p <= params.operators_probability + params.variables_probability)
 					a_chromosome.prg[i].op = rand() % num_variables;
 				else
 					a_chromosome.prg[i].op = num_variables + rand() % params.num_constants; // index of a constant
+			}
 		}
 
 		p = rand() / (double)RAND_MAX;      // mutate the first address  (adr1)
@@ -520,7 +521,7 @@ void evolve_one_subpopulation(int *current_subpop_index, std::mutex* mutex,
 					if (params.problem_type == PROBLEM_REGRESSION)
 						fitness_regression(a_sub_population[i], params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
 					else
-						fitness_binary_classification(a_sub_population[i], params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
+						fitness_binary_classification(a_sub_population[i], params, num_variables, num_training_data, training_data, target, eval_matrix);
 
 				}
 				// sort ascendingly by fitness inside this population
@@ -546,13 +547,13 @@ void evolve_one_subpopulation(int *current_subpop_index, std::mutex* mutex,
 					if (params.problem_type == PROBLEM_REGRESSION)
 						fitness_regression(offspring1, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
 					else
-						fitness_binary_classification(offspring1, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
+						fitness_binary_classification(offspring1, params, num_variables, num_training_data, training_data, target, eval_matrix);
 					// mutate the other offspring too
 					mutation(offspring2, params, num_variables);
 					if (params.problem_type == PROBLEM_REGRESSION)
 						fitness_regression(offspring2, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
 					else
-						fitness_binary_classification(offspring2, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
+						fitness_binary_classification(offspring2, params, num_variables, num_training_data, training_data, target, eval_matrix);
 
 					// replace the worst in the population
 					if (offspring1.fitness < a_sub_population[params.sub_population_size - 1].fitness) {
