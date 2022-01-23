@@ -426,8 +426,8 @@ void start_steady_state_mep(t_mep_parameters &params, const double **training_da
 			int num_training_data, int num_variables) 
 {
 	// a steady state approach:
-	// we work with 1 population
-	// newly created individuals will replace the worst existing ones (only if they are better).
+	// we work with 1 (one) population
+	// newly created individuals will replace the worst existing ones (only if the offspring are better).
 
 	// allocate memory
 	t_mep_chromosome *population;
@@ -449,14 +449,13 @@ void start_steady_state_mep(t_mep_parameters &params, const double **training_da
 			fitness_regression(population[i], params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
 		else
 			fitness_classification(population[i], params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
-
 	}
 	// sort ascendingly by fitness
 	qsort((void *)population, params.pop_size, sizeof(population[0]), sort_function);
 
 	printf("generation %d, best fitness = %lf\n", 0, population[0].fitness);
 
-	for (int g = 1; g < params.num_generations; g++) {// for each generation
+	for (int generation = 1; generation < params.num_generations; generation++) {// for each generation
 		for (int k = 0; k < params.pop_size; k += 2) {
 			// choose the parents using binary tournament
 			int r1 = tournament_selection(population, params.pop_size, 2);
@@ -492,9 +491,9 @@ void start_steady_state_mep(t_mep_parameters &params, const double **training_da
 				qsort((void *)population, params.pop_size, sizeof(population[0]), sort_function);
 			}
 		}
-		printf("generation %d, best fitness = %lf\n", g, population[0].fitness);
+		printf("generation %d, best fitness = %lf\n", generation, population[0].fitness);
 	}
-	// print best chromosome
+	// print best chromosome which is always on position 0 because of sorting
 	print_chromosome(population[0], params, num_variables);
 
 	// free memory
