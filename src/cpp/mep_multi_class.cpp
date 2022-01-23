@@ -39,7 +39,7 @@
 #include <string.h>
 #include <float.h>
 
-#define num_operators 6
+#define NUM_Operators 6
 
 // +   -1
 // -   -2
@@ -48,7 +48,7 @@
 // sin -5
 // asin -6
 
-char operators_string[7] = "+-*/sa";
+char operators_string[NUM_Operators + 1] = "+-*/sa";
 
 #define PROBLEM_TYPE_REGRESSION 0
 #define PROBLEM_TYPE_CLASSIFICATION 1
@@ -294,7 +294,7 @@ void generate_random_chromosome(t_chromosome &a, const t_parameters &params, int
 		p = rand() / (double)RAND_MAX;
 
 		if (p <= params.operators_probability)
-			a.prg[i].op = -rand() % num_operators - 1;        // an operator
+			a.prg[i].op = -rand() % NUM_Operators - 1;        // an operator
 		else
 			if (p <= params.operators_probability + params.variables_probability)
 				a.prg[i].op = rand() % num_variables;     // a variable
@@ -541,7 +541,7 @@ void mutation(t_chromosome &a_chromosome, const t_parameters &params, int num_va
 			p = rand() / (double)RAND_MAX;
 
 			if (p <= params.operators_probability)
-				a_chromosome.prg[i].op = -rand() % num_operators - 1;
+				a_chromosome.prg[i].op = -rand() % NUM_Operators - 1;
 			else
 				if (p <= params.operators_probability + params.variables_probability)
 					a_chromosome.prg[i].op = rand() % num_variables;
