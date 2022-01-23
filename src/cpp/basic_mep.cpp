@@ -2,7 +2,7 @@
 //	Multi Expression Programming - basic source code for solving symbolic regression and binary classification problems
 //	author: Mihai Oltean  
 //	mihai.oltean@gmail.com
-//	Last update on: 2021.11.27
+//	Last update on: 2022.1.23
 
 //	License: MIT
 //---------------------------------------------------------------------------
@@ -39,14 +39,15 @@
 #define PROBLEM_REGRESSION 0
 #define PROBLEM_BINARY_CLASSIFICATION 1
 
-#define num_operators 4
+#define NUM_Operators 5
 
 #define ADD_OP -1 // +
 #define DIF_OP -2 // -
 #define MUL_OP -3 // *
 #define DIV_OP -4 // /
+#define SIN_OP -5 // /
 
-char operators_string[5] = "+-*/";
+char operators_string[NUM_Operators + 1] = "+-*/s";
 
 //---------------------------------------------------------------------------
 struct t_code3{
@@ -166,13 +167,13 @@ void generate_random_chromosome(t_mep_chromosome &a, t_mep_parameters &params, i
 		p = rand() / (double)RAND_MAX;
 
 		if (p <= params.operators_probability)
-			a.code[i].op = -rand() % num_operators - 1;        // an operator
-		else
+			a.code[i].op = -rand() % NUM_Operators - 1;        // an operator
+		else {
 			if (p <= params.operators_probability + params.variables_probability)
 				a.code[i].op = rand() % num_variables;     // a variable
 			else
 				a.code[i].op = num_variables + rand() % params.num_constants; // index of a constant
-
+		}
 		a.code[i].addr1 = rand() % i;
 		a.code[i].addr2 = rand() % i;
 	}
@@ -291,12 +292,13 @@ void mutation(t_mep_chromosome &a_chromosome, const t_mep_parameters &params, in
 			p = rand() / (double)RAND_MAX;
 
 			if (p <= params.operators_probability)
-				a_chromosome.code[i].op = -rand() % num_operators - 1;
-			else
+				a_chromosome.code[i].op = -rand() % NUM_Operators - 1;
+			else {
 				if (p <= params.operators_probability + params.variables_probability)
 					a_chromosome.code[i].op = rand() % num_variables;
 				else
 					a_chromosome.code[i].op = num_variables + rand() % params.num_constants; // index of a constant
+			}
 		}
 
 		p = rand() / (double)RAND_MAX;      // mutate the first address  (addr1)
@@ -379,19 +381,24 @@ int sort_function(const void *a, const void *b)
 void print_chromosome(const t_mep_chromosome& a, const t_mep_parameters &params, int num_variables)
 {
 	printf("The chromosome is:\n");
-
+	printf("//------------------------------------------\n");
 	for (int i = 0; i < params.num_constants; i++)
 		printf("constants[%d] = %lf\n", i, a.constants[i]);
 
 	for (int i = 0; i < params.code_length; i++)
-		if (a.code[i].op < 0)
-			printf("%d: %c %d %d\n", i, operators_string[abs(a.code[i].op) - 1], a.code[i].addr1, a.code[i].addr2);
-		else
+		if (a.code[i].op < 0) {
+			if (a.code[i].op == SIN_OP)
+				printf("%d: sin %d\n", i, a.code[i].addr1);
+			else// binary operators
+				printf("%d: %c %d %d\n", i, operators_string[abs(a.code[i].op) - 1], a.code[i].addr1, a.code[i].addr2);
+		}
+		else {
 			if (a.code[i].op < num_variables)
 				printf("%d: inputs[%d]\n", i, a.code[i].op);
 			else
 				printf("%d: constants[%d]\n", i, a.code[i].op - num_variables);
-
+		}
+	printf("//------------------------------------------\n");
 	printf("best index = %d\n", a.best_index);
 	printf("Fitness = %lf\n", a.fitness);
 }
@@ -564,7 +571,7 @@ int main(void)
 
 	params.pop_size = 100;						    // the number of individuals in population  (must be an even number!)
 	params.code_length = 50;
-	params.num_generations = 10;					// the number of generations
+	params.num_generations = 100;					// the number of generations
 	params.mutation_probability = 0.1;              // mutation probability
 	params.crossover_probability = 0.9;             // crossover probability
 
@@ -572,7 +579,7 @@ int main(void)
 	params.operators_probability = 0.5;
 	params.constants_probability = 1 - params.variables_probability - params.operators_probability; // sum of variables_prob + operators_prob + constants_prob MUST BE 1 !
 
-	params.num_constants = 3; // use 3 constants from -1 ... +1 interval
+	params.num_constants = 5; // use 5 constants from -1 ... +1 interval
 	params.constants_min = -1;
 	params.constants_max = 1;
 
@@ -582,7 +589,9 @@ int main(void)
 	int num_training_data, num_variables;
 	double** training_data, *target;
 
-	if (!read_data("datasets\\building1.txt", ' ', training_data, target, num_training_data, num_variables)) {
+	if (!read_data("C:/Mihai/Dropbox/mep/src/console/mep/datasets/building1.txt", ' ', training_data, target, num_training_data, num_variables)) {
+	
+	//if (!read_data("datasets/building1.txt", ' ', training_data, target, num_training_data, num_variables)) {
 		printf("Cannot find file! Please specify the full path!");
 		getchar();
 		return 1;
