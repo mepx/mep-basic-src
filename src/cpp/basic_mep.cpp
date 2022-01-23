@@ -231,8 +231,9 @@ void compute_eval_matrix(const t_mep_chromosome &c, int code_length, int num_var
 	}
 }
 //---------------------------------------------------------------------------
-void fitness_regression(t_mep_chromosome &c, int code_length, int num_variables, int num_training_data, 
-			const double **training_data, const double *target, double **eval_matrix)
+void fitness_regression(t_mep_chromosome &c, int code_length, int num_variables, 
+	int num_training_data, const double **training_data, const double *target, 
+	double **eval_matrix)
 {
 	c.fitness = 1e+308;
 	c.best_index = -1;
@@ -251,18 +252,23 @@ void fitness_regression(t_mep_chromosome &c, int code_length, int num_variables,
 	}
 }
 //---------------------------------------------------------------------------
-void fitness_classification(t_mep_chromosome &c, int code_length, int num_variables, int num_training_data, 
-		const double **training_data, const double *target, double **eval_matrix)
+void fitness_classification(t_mep_chromosome &c, const t_mep_parameters& params, int num_variables,
+	int num_training_data, const double **training_data, const double *target, 
+	double **eval_matrix)
 {
+	// use a threshold
+	// if is less than threshold, it belongs to class 0
+	// otherwise belongs to class 1
+
 	c.fitness = 1e+308;
 	c.best_index = -1;
 
-	compute_eval_matrix(c, code_length, num_variables, num_training_data, training_data, eval_matrix);// compute the output of each expression
+	compute_eval_matrix(c, params.code_length, num_variables, num_training_data, training_data, eval_matrix);// compute the output of each expression
 
-	for (int i = 0; i < code_length; i++) {   // read the chromosome from top to down
+	for (int i = 0; i < params.code_length; i++) {   // read the chromosome from top to down
 		int count_incorrect_classified = 0;
 		for (int k = 0; k < num_training_data; k++)
-			if (eval_matrix[i][k] < 0) // the program tells me that this data is in class 0
+			if (eval_matrix[i][k] < params.classification_threshold) // the program tells me that this data is in class 0
 				count_incorrect_classified += (int)target[k];
 			else // the program tells me that this data is in class 1
 				count_incorrect_classified += abs(1 - (int)target[k]);// difference between obtained and expected
@@ -324,7 +330,8 @@ void mutation(t_mep_chromosome &a_chromosome, const t_mep_parameters &params, in
 }
 //---------------------------------------------------------------------------
 void one_cut_point_crossover(const t_mep_chromosome &parent1, const t_mep_chromosome &parent2, 
-	const t_mep_parameters &params, t_mep_chromosome &offspring1, t_mep_chromosome &offspring2)
+	const t_mep_parameters &params, 
+	t_mep_chromosome &offspring1, t_mep_chromosome &offspring2)
 {
 	int cutting_pct = rand() % params.code_length;
 	for (int i = 0; i < cutting_pct; i++) {
@@ -349,7 +356,9 @@ void one_cut_point_crossover(const t_mep_chromosome &parent1, const t_mep_chromo
 	}
 }
 //---------------------------------------------------------------------------
-void uniform_crossover(const t_mep_chromosome &parent1, const t_mep_chromosome &parent2, const t_mep_parameters &params, t_mep_chromosome &offspring1, t_mep_chromosome &offspring2)
+void uniform_crossover(const t_mep_chromosome &parent1, const t_mep_chromosome &parent2, 
+	const t_mep_parameters &params, 
+	t_mep_chromosome &offspring1, t_mep_chromosome &offspring2)
 {
 	for (int i = 0; i < params.code_length; i++)
 		if (rand() % 2) {
@@ -422,8 +431,8 @@ int tournament_selection(const t_mep_chromosome *population, int pop_size, int t
 	return p;
 }
 //---------------------------------------------------------------------------
-void start_steady_state_mep(t_mep_parameters &params, const double **training_data, const double* target, 
-			int num_training_data, int num_variables) 
+void start_steady_state_mep(t_mep_parameters &params, 
+	const double **training_data, const double* target, int num_training_data, int num_variables) 
 {
 	// a steady state approach:
 	// we work with 1 (one) population
@@ -447,8 +456,8 @@ void start_steady_state_mep(t_mep_parameters &params, const double **training_da
 		generate_random_chromosome(population[i], params, num_variables);
 		if (params.problem_type == PROBLEM_REGRESSION)
 			fitness_regression(population[i], params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
-		else
-			fitness_classification(population[i], params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
+		else// classification problem
+			fitness_classification(population[i], params, num_variables, num_training_data, training_data, target, eval_matrix);
 	}
 	// sort ascendingly by fitness
 	qsort((void *)population, params.pop_size, sizeof(population[0]), sort_function);
@@ -472,14 +481,14 @@ void start_steady_state_mep(t_mep_parameters &params, const double **training_da
 			mutation(offspring1, params, num_variables);
 			if (params.problem_type == PROBLEM_REGRESSION)
 				fitness_regression(offspring1, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
-			else
-				fitness_classification(offspring1, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
+			else// classification problem
+				fitness_classification(offspring1, params, num_variables, num_training_data, training_data, target, eval_matrix);
 			// mutate the other offspring and compute fitness
 			mutation(offspring2, params, num_variables);
 			if (params.problem_type == PROBLEM_REGRESSION)
 				fitness_regression(offspring2, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
-			else
-				fitness_classification(offspring2, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
+			else // classification problem
+				fitness_classification(offspring2, params, num_variables, num_training_data, training_data, target, eval_matrix);
 
 			// replace the worst in the population
 			if (offspring1.fitness < population[params.pop_size - 1].fitness) {
@@ -589,7 +598,7 @@ int main(void)
 	params.constants_min = -1;
 	params.constants_max = 1;
 
-	params.problem_type = PROBLEM_REGRESSION;             //0 - regression, 1 - classification; DONT FORGET TO SET IT
+	params.problem_type = PROBLEM_REGRESSION; //0 - regression, 1 - classification; DONT FORGET TO SET IT
 	params.classification_threshold = 0; // only for classification problems
 
 	int num_training_data, num_variables;
