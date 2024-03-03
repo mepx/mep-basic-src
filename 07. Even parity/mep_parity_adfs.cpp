@@ -1,14 +1,14 @@
 // ---------------------------------------------------------------------------
 // Multi Expression Programming - basic source code for solving Even Parity problems with Automatically Defined Functions
 // Author: Mihai Oltean, mihai.oltean@gmail.com
-// Version: 2021.11.25
+// Version: 2024.3.3.0
 
 // License: MIT
 // ---------------------------------------------------------------------------
 
 // More info at:
-// www.mepx.org
-// www.github.com/mepx
+// mepx.org
+// github.com/mepx
 //---------------------------------------------------------------------------
 
 // paper to read:
@@ -30,14 +30,14 @@
 
 // where m is the number of training data
 // and n is the number of variables.
-
+//---------------------------------------------------------------------------
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
 #define max_num_inputs_ADF 4
 
-#define num_operators 4 // 4 + 2 Automatically Defined Functions
+#define NUM_Operators 4 // 4 + 2 Automatically Defined Functions
 
 // and -1
 // or -2
@@ -197,7 +197,7 @@ void generate_random_chromosome(t_mep_chromosome &a, const t_mep_parameters &par
 		double p = rand() / (double)RAND_MAX;
 
 		if (p <= params.operators_probability)
-			a.prg[i].op = -rand() % (num_operators + 2) - 1; // an operator
+			a.prg[i].op = -rand() % (NUM_Operators + 2) - 1; // an operator
 		else
 			a.prg[i].op = rand() % num_variables; // a variable
 
@@ -215,7 +215,7 @@ void generate_random_chromosome(t_mep_chromosome &a, const t_mep_parameters &par
 		double p = rand() / (double)RAND_MAX;
 
 		if (p <= params.operators_probability)
-			a.adf_0[i].op = -rand() % num_operators - 1; // an operator
+			a.adf_0[i].op = -rand() % NUM_Operators - 1; // an operator
 		else
 			a.adf_0[i].op = rand() % params.num_adf_parameters[0]; // a variable
 
@@ -231,7 +231,7 @@ void generate_random_chromosome(t_mep_chromosome &a, const t_mep_parameters &par
 		double p = rand() / (double)RAND_MAX;
 
 		if (p <= params.operators_probability)
-			a.adf_1[i].op = -rand() % num_operators - 1; // an operator
+			a.adf_1[i].op = -rand() % NUM_Operators - 1; // an operator
 		else
 			a.adf_1[i].op = rand() % params.num_adf_parameters[1]; // a variable
 
@@ -247,7 +247,7 @@ void generate_random_chromosome(t_mep_chromosome &a, const t_mep_parameters &par
 		double p = rand() / (double)RAND_MAX;
 
 		if (p <= params.operators_probability)
-			a.adf_2[i].op = -rand() % num_operators - 1; // an operator
+			a.adf_2[i].op = -rand() % NUM_Operators - 1; // an operator
 		else
 			a.adf_2[i].op = rand() % params.num_adf_parameters[2]; // a variable
 
@@ -407,7 +407,7 @@ void mutation(t_mep_chromosome &a_chromosome, const t_mep_parameters &params, in
 			p = rand() / (double)RAND_MAX;
 
 			if (p <= params.operators_probability)
-				a_chromosome.prg[i].op = -rand() % (num_operators + 2) - 1;
+				a_chromosome.prg[i].op = -rand() % (NUM_Operators + 2) - 1;
 			else
 				a_chromosome.prg[i].op = rand() % num_variables;
 		}
@@ -442,7 +442,7 @@ void mutation(t_mep_chromosome &a_chromosome, const t_mep_parameters &params, in
 			p = rand() / (double)RAND_MAX;
 
 			if (p <= params.operators_probability)
-				a_chromosome.adf_0[i].op = -rand() % num_operators - 1;
+				a_chromosome.adf_0[i].op = -rand() % NUM_Operators - 1;
 			else
 				a_chromosome.adf_0[i].op = rand() % params.num_adf_parameters[0];
 		}
@@ -469,7 +469,7 @@ void mutation(t_mep_chromosome &a_chromosome, const t_mep_parameters &params, in
 			p = rand() / (double)RAND_MAX;
 
 			if (p <= params.operators_probability)
-				a_chromosome.adf_1[i].op = -rand() % num_operators - 1;
+				a_chromosome.adf_1[i].op = -rand() % NUM_Operators - 1;
 			else
 				a_chromosome.adf_1[i].op = rand() % params.num_adf_parameters[1];
 		}
@@ -496,7 +496,7 @@ void mutation(t_mep_chromosome &a_chromosome, const t_mep_parameters &params, in
 			p = rand() / (double)RAND_MAX;
 
 			if (p <= params.operators_probability)
-				a_chromosome.adf_2[i].op = -rand() % num_operators - 1;
+				a_chromosome.adf_2[i].op = -rand() % NUM_Operators - 1;
 			else
 				a_chromosome.adf_2[i].op = rand() % params.num_adf_parameters[2];
 		}
@@ -787,7 +787,7 @@ int main(void) {
 	int num_training_data, num_variables;
 	int** training_data, *target;
 
-	if (!read_training_data("datasets\\even_6_parity.txt", training_data, target, num_training_data, num_variables)) {
+	if (!read_training_data("even_6_parity.txt", training_data, target, num_training_data, num_variables)) {
 		printf("Cannot find input file! Please specify the full path!");
 		getchar();
 		return 1;

@@ -1,8 +1,8 @@
 //---------------------------------------------------------------------------
-//	Multi Expression Programming - basic source code for solving symbolic regression and binary classification problems
+//	Multi Expression Programming - basic source code for solving binary classification problems
 //	author: Mihai Oltean  
 //	mihai.oltean@gmail.com
-//	Last update on: 2022.1.23
+//	Last update on: 2024.3.3.0
 
 //	License: MIT
 //---------------------------------------------------------------------------
@@ -11,9 +11,6 @@
 //     https://mepx.org
 //     https://mepx.github.io
 //     https://github.com/mepx
-
-//   Compiled with Microsoft Visual C++ 2019
-//   Also compiled with XCode 9.
 
 //   Please reports any sugestions and/or bugs to mihai.oltean@gmail.com
 
@@ -30,15 +27,13 @@
 //   x_ij are the inputs
 //   f_i are the outputs
 
+//---------------------------------------------------------------------------
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
 #include <time.h>
-
-#define PROBLEM_REGRESSION 0
-#define PROBLEM_BINARY_CLASSIFICATION 1
-
+//---------------------------------------------------------------------------
 #define NUM_Operators 5
 
 #define ADD_OP -1 // +
@@ -47,8 +42,7 @@
 #define DIV_OP -4 // /
 #define SIN_OP -5 // /
 
-char operators_string[NUM_Operators + 1] = "+-*/s";
-
+char operators_as_string[NUM_Operators + 1] = "+-*/s";
 //---------------------------------------------------------------------------
 struct t_code3{
 	int op;				// either a variable, an operator or a constant
@@ -63,7 +57,6 @@ struct t_mep_chromosome{
 	double *constants;   // an array of constants
 
 	double fitness;        // the fitness (or the error)
-	// for regression is computed as sum of abs differences between target and obtained
 	// for binary classification is computed as the number of incorrectly classified data
 	int best_index;        // the index of the best expression in chromosome
 };
@@ -77,7 +70,6 @@ struct t_mep_parameters{
 	double constants_min, constants_max;   // the array for constants
 	double variables_probability, operators_probability, constants_probability;
 
-	int problem_type; //0 - regression, 1 - classification
 	double classification_threshold; // for classification problems only
 };
 //---------------------------------------------------------------------------
@@ -231,28 +223,7 @@ void compute_eval_matrix(const t_mep_chromosome &c, int code_length, int num_var
 	}
 }
 //---------------------------------------------------------------------------
-void fitness_regression(t_mep_chromosome &c, int code_length, int num_variables, 
-	int num_training_data, const double **training_data, const double *target, 
-	double **eval_matrix)
-{
-	c.fitness = 1e+308;
-	c.best_index = -1;
-
-	compute_eval_matrix(c, code_length, num_variables, num_training_data, training_data, eval_matrix);
-
-	for (int i = 0; i < code_length; i++) {   // read the chromosome from top to down
-		double sum_of_errors = 0;
-		for (int k = 0; k < num_training_data; k++)
-			sum_of_errors += fabs(eval_matrix[i][k] - target[k]);// difference between obtained and expected
-
-		if (c.fitness > sum_of_errors) {
-			c.fitness = sum_of_errors;
-			c.best_index = i;
-		}
-	}
-}
-//---------------------------------------------------------------------------
-void fitness_classification(t_mep_chromosome &c, const t_mep_parameters& params, int num_variables,
+void fitness_binary_classification(t_mep_chromosome &c, const t_mep_parameters& params, int num_variables,
 	int num_training_data, const double **training_data, const double *target, 
 	double **eval_matrix)
 {
@@ -405,7 +376,7 @@ void print_chromosome(const t_mep_chromosome& a, const t_mep_parameters &params,
 			if (a.code[i].op == SIN_OP)
 				printf("%d: sin %d\n", i, a.code[i].addr1);
 			else// binary operators
-				printf("%d: %c %d %d\n", i, operators_string[abs(a.code[i].op) - 1], a.code[i].addr1, a.code[i].addr2);
+				printf("%d: %c %d %d\n", i, operators_as_string[abs(a.code[i].op) - 1], a.code[i].addr1, a.code[i].addr2);
 		}
 		else {
 			if (a.code[i].op < num_variables)
@@ -454,10 +425,7 @@ void start_steady_state_mep(t_mep_parameters &params,
 	// initialize
 	for (int i = 0; i < params.pop_size; i++) {
 		generate_random_chromosome(population[i], params, num_variables);
-		if (params.problem_type == PROBLEM_REGRESSION)
-			fitness_regression(population[i], params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
-		else// classification problem
-			fitness_classification(population[i], params, num_variables, num_training_data, training_data, target, eval_matrix);
+		fitness_binary_classification(population[i], params, num_variables, num_training_data, training_data, target, eval_matrix);
 	}
 	// sort ascendingly by fitness
 	qsort((void *)population, params.pop_size, sizeof(population[0]), sort_function);
@@ -479,16 +447,10 @@ void start_steady_state_mep(t_mep_parameters &params,
 			}
 			// mutate the result and compute fitness
 			mutation(offspring1, params, num_variables);
-			if (params.problem_type == PROBLEM_REGRESSION)
-				fitness_regression(offspring1, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
-			else// classification problem
-				fitness_classification(offspring1, params, num_variables, num_training_data, training_data, target, eval_matrix);
+			fitness_binary_classification(offspring1, params, num_variables, num_training_data, training_data, target, eval_matrix);
 			// mutate the other offspring and compute fitness
 			mutation(offspring2, params, num_variables);
-			if (params.problem_type == PROBLEM_REGRESSION)
-				fitness_regression(offspring2, params.code_length, num_variables, num_training_data, training_data, target, eval_matrix);
-			else // classification problem
-				fitness_classification(offspring2, params, num_variables, num_training_data, training_data, target, eval_matrix);
+			fitness_binary_classification(offspring2, params, num_variables, num_training_data, training_data, target, eval_matrix);
 
 			// replace the worst in the population
 			if (offspring1.fitness < population[params.pop_size - 1].fitness) {
@@ -598,13 +560,12 @@ int main(void)
 	params.constants_min = -1;
 	params.constants_max = 1;
 
-	params.problem_type = PROBLEM_REGRESSION; //0 - regression, 1 - classification; DONT FORGET TO SET IT
 	params.classification_threshold = 0; // only for classification problems
 
 	int num_training_data, num_variables;
 	double** training_data, *target;
 
-	if (!read_data("C:/Mihai/Dropbox/mep/src/console/mep/datasets/building1.txt", ' ', training_data, target, num_training_data, num_variables)) {
+	if (!read_data("cancer1.txt", ' ', training_data, target, num_training_data, num_variables)) {
 	
 	//if (!read_data("datasets/building1.txt", ' ', training_data, target, num_training_data, num_variables)) {
 		printf("Cannot find file! Please specify the full path!");

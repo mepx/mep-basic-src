@@ -2,42 +2,44 @@
 
 There are 6 source codes in this repository:
 
-[basic_mep.cpp](src/cpp/basic_mep.cpp) - basic MEP algorithm. Solves regression and binary classification problems. This should be the starting point for everyone.
+[mep_symbolic_regression.cpp](01.%20Symbolic%20regression/) - basic MEP algorithm. Solves symbolic regression and binary classification problems. This should be the starting point for everyone.
 
-[mep_multiple_pop.cpp](src/cpp/mep_multiple_pop.cpp) - MEP with multiple (sub)populations for regression and binary classification problems.
+[mep_binary_classification.cpp](02.%20Binary%20classification/) - basic MEP algorithm. Solves symbolic regression and binary classification problems. This should be the starting point for everyone.
 
-[mep_circuits.cpp](src/cpp/mep_circuits.cpp) - MEP for evolving digital circuits.
+[mep_multiple_pop.cpp](03.%20Multiple%20populations%20-%20symbolic%20regression%20and%20binary%20classification/) - MEP with multiple (sub)populations for regression and binary classification problems.
 
-[mep_threads.cpp](src/cpp/mep_threads.cpp) - MEP with multiple (sub)populations evolved in different threads for regression and binary classification problems.
+[mep_multi_class.cpp](04.%20Multi-class%20classification/) - MEP algorithm. Solves regression and multi-class classification problems.
 
-[mep_multi_class.cpp](src/cpp/mep_multi_class.cpp) - MEP algorithm. Solves regression and multi-class classification problems.
+[mep_threads.cpp](05.%20Threads%20-%20Regression%20and%20classification/) - MEP with multiple (sub)populations evolved in different threads for regression and binary classification problems.
 
-[mep_parity_adfs.cpp](src/cpp/mep_parity_adfs.cpp) - MEP algorithm with Automatically Defined Functions for even parity problems.
+[mep_circuits.cpp](06.%20Digital%20circuits%20design/) - MEP for evolving digital circuits.
+
+[mep_parity_adfs.cpp](07.%20Even%20parity/) - MEP algorithm with Automatically Defined Functions for Even-Parity problems.
 
 ## How to run
 
-Take a _.cpp_ program from [src/cpp](src/cpp) folder and compile it.
-You also need a dataset from the [datasets](datasets) folder. Make sure that you specify the path correctly.
+Take a _.cpp_ program from a folder and compile it.
+You also need a dataset from the the same folder as the _cpp_ file. Make sure that you specify the path correctly.
 
 ## Datasets
 
-There are 6 datasets in this repository (check [datasets](datasets) folder):
+There are multiple datasets in this repository:
 
-[building1.txt](datasets/building1.txt) - this is a symbolic regression problem taken from PROBEN1. It is used by [mep.cpp](src/cpp/mep.cpp), [mep_multiple_pop.cpp](src/cpp/mep_multiple_pop.cpp), [mep_multi_class.cpp](src/cpp/mep_multi_class.cpp) and [mep_threads.cpp](src/cpp/mep_threads.cpp) for training.
+**building1.txt** - a symbolic regression problem taken from PROBEN1.
 
-[cancer1.txt](datasets/cancer1.txt) - this is a classification problem taken from PROBEN1. It is used by [mep.cpp](src/cpp/mep.cpp), [mep_multiple_pop.cpp](src/cpp/mep_multiple_pop.cpp), [mep_multi_class.cpp](src/cpp/mep_multi_class.cpp) and [mep_threads.cpp](src/cpp/mep_threads.cpp) for training.
+**cancer1.txt** - a binary classification problem taken from PROBEN1.
 
-[2x2_multiplier.txt](datasets/2x2_multiplier.txt), [3x3_multiplier.txt](datasets/3x3_multiplier.txt) - this is a problem of designing digital circuits (for 2x2 and 3x3 multiplication). It is used by [mep_circuits.cpp](src/cpp/mep_circuits.cpp) for training.
+**iris.txt** - a classification problem with 3 classes.
 
-[iris.txt](datasets/iris.txt) - a classification problem with 3 classes. It is used by [mep_multi_class.cpp](src/cpp/mep_multi_class.cpp) for training.
+**gene1.dt** - a classification problem with 3 classes. Format of output is 1-of-m.
 
-[gene1.dt](datasets/gene1.dt) - a classification problem with 3 classes. It is used by [mep_multi_class.cpp](src/cpp/mep_multi_class.cpp) for training.
+**2x2_multiplier.txt**, **3x3_multiplier.txt** - this is a problem of designing digital circuits (for 2x2 and 3x3 multiplication).
 
-[even_6_parity.txt](datasets/even_6_parity.txt) - even parity problems with 7 inputs. It is used by [mep_parity_adfs.cpp](src/cpp/mep_parity_adfs.cpp) for training.
+**even_6_parity.txt** - even parity problems with 7 inputs.
 
 # More info:
 
-[www.mepx.org](https://www.mepx.org)
+[mepx.org](https://mepx.org)
 
 [mepx.github.io](https://mepx.github.io)
 

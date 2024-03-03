@@ -33,19 +33,17 @@
 //   n is the number of inputs
 //   k  is the number of outputs of the circuit
 
-
+//---------------------------------------------------------------------------
 #include <stdio.h>
 #include <stdlib.h>
-
-
-#define num_operators 3 // also called gates
+//---------------------------------------------------------------------------
+#define NUM_Operators 3 // also called gates
 
 // a and b   -1
 // a and not b   -2
 // a xor b   -3
 
 char operators_string[3][10] = {"a&b", "a&!b", "a^b"};
-
 //---------------------------------------------------------------------------
 struct t_code3{
 	int op;				// either an input (variable) or a gate (operator); 
@@ -193,7 +191,7 @@ void generate_random_chromosome(t_chromosome &a_chromosome, const t_parameters &
 		double p = rand() / (double)RAND_MAX;
 
 		if (p <= params.operators_probability)
-			a_chromosome.prg[i].op = -rand() % num_operators - 1;        // an operator
+			a_chromosome.prg[i].op = -rand() % NUM_Operators - 1;        // an operator
 		else
 			a_chromosome.prg[i].op = rand() % num_variables;     // a variable
 
@@ -215,8 +213,10 @@ void mark_all(const t_chromosome& a_chromosome, char*marked, int current_index)
 }
 //---------------------------------------------------------------------------
 // evaluate Individual
-void fitness(t_chromosome &a_chromosome, int code_length, int num_variables, int num_training_data, int num_outputs, 
-	char**training_data, char**target, char**eval_matrix, int **error_matrix)
+void fitness(t_chromosome &a_chromosome, 
+	int code_length, int num_variables, int num_training_data, int num_outputs, 
+	char**training_data, char**target, 
+	char**eval_matrix, int **error_matrix)
 {
 	a_chromosome.fitness = num_outputs * num_training_data + 1; // the worst error we could have + 1
 
@@ -311,7 +311,7 @@ void mutation(t_chromosome &a_chromosome, const t_parameters &params, int num_va
 			p = rand() / (double)RAND_MAX;
 
 			if (p <= params.operators_probability)
-				a_chromosome.prg[i].op = -rand() % num_operators - 1;
+				a_chromosome.prg[i].op = -rand() % NUM_Operators - 1;
 			else
 				a_chromosome.prg[i].op = rand() % num_variables;
 		}
