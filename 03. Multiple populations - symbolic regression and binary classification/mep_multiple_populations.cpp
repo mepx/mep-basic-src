@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 //   Multi Expression Programming Software - with multiple subpopulations
 //   Author: Mihai Oltean (mihai.oltean@gmail.com)
-//   Version: 2024.3.3.0
+//   Version: 2024.3.10.0
 
 //   License: MIT
 //---------------------------------------------------------------------------
@@ -10,20 +10,8 @@
 
 //   I recommend to check the basic variant first (without subpopulations)
 //---------------------------------------------------------------------------
-
-//   Compiled with Microsoft Visual C++ 2019
-//   Also compiled with XCode 5.
-//---------------------------------------------------------------------------
-
 //   How to use it: 
 //   	just create a console project and copy-paste the content this file in the main file of the project
-
-//   More info at:  
-//     https://mepx.org
-//     https://mepx.github.io
-//     https://github.com/mepx
-
-//   Please reports any sugestions and/or bugs to:     mihai.oltean@gmail.com
 //---------------------------------------------------------------------------
 //   Training data file must have the following format (see building1.txt and cancer1.txt from datasets folder):
 //   building1 and cancer1 data were taken from PROBEN1
