@@ -455,7 +455,7 @@ void print_mep_chromosome(const t_mep_chromosome& a, const t_mep_parameters &par
 
 	for (int i = 0; i < params.code_length; i++)
 		if (a.prg[i].op < 0)
-			printf("%d: %c %d %d\n", i, operators_as_strings[abs(a.prg[i].op) - 1], a.prg[i].adr1, a.prg[i].adr2);
+			printf("%d: %c %d %d\n", i, operators_as_string[abs(a.prg[i].op) - 1], a.prg[i].adr1, a.prg[i].adr2);
 		else
 			if (a.prg[i].op < num_variables)
 				printf("%d: inputs[%d]\n", i, a.prg[i].op);
