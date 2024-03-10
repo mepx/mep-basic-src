@@ -9,7 +9,7 @@
 // Oltean Mihai, Improving Multi Expression Programming: an Ascending Trail from Sea - level Even-3-parity Problem to Alpine Even-18-Parity Problem, chapter 10, Evolvable Machines: Theory and Applications, Springer - Verlag, edited by Nadia Nedjah(et al.), pp. 229 - 255, 2004
 // https://mepx.github.io/oltean_parity.pdf
 //---------------------------------------------------------------------------
-// Training data file must have the following format (see even_7_parity.txt):
+// Training data file must have the following format (see even_6_parity.txt):
 
 // m n
 // x11 x12 ... x1n t1
