@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------
-//   Multi Expression Programming for evolving Evolutionary Algorithms
+//   Multi Expression Programming for evolving Evolutionary Algorithms for function optimization
 //   Author: Mihai Oltean  (mihai.oltean@gmail.com)
 //   Version 2024.08.10.0
 //   New versions of this program will be available at: https://github.com/mepx/mep-basic-src

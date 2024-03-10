@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------
-//	Evolving Evolutionary Algorithms for MultiObjective problems
+//	Evolving Evolutionary Algorithms for MultiObjective function optimization problems
 //	Author: Mihai Oltean (mihai.oltean@gmail.com)
 //  Version 2024.03.10.0
 
