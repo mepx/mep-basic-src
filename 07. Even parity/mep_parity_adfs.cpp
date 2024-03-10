@@ -1,24 +1,13 @@
 // ---------------------------------------------------------------------------
 // Multi Expression Programming - basic source code for solving Even Parity problems with Automatically Defined Functions
-// Author: Mihai Oltean, mihai.oltean@gmail.com
-// Version: 2024.3.3.0
-
+// Author: Mihai Oltean, (mihai.oltean@gmail.com)
+// Version: 2024.3.10.0
+// ---------------------------------------------------------------------------
 // License: MIT
 // ---------------------------------------------------------------------------
-
-// More info at:
-// mepx.org
-// github.com/mepx
-//---------------------------------------------------------------------------
-
 // paper to read:
 // Oltean Mihai, Improving Multi Expression Programming: an Ascending Trail from Sea - level Even-3-parity Problem to Alpine Even-18-Parity Problem, chapter 10, Evolvable Machines: Theory and Applications, Springer - Verlag, edited by Nadia Nedjah(et al.), pp. 229 - 255, 2004
 // https://mepx.github.io/oltean_parity.pdf
-//---------------------------------------------------------------------------
-
-// Compiled with Microsoft Visual C++ 2019, XCode 7 and Embarcadero C++Builder XE
-
-// Please reports any sugestions and/or bugs to mihai.oltean@gmail.com
 //---------------------------------------------------------------------------
 // Training data file must have the following format (see even_7_parity.txt):
 
@@ -34,7 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
+//---------------------------------------------------------------------------
 #define max_num_inputs_ADF 4
 
 #define NUM_Operators 4 // 4 + 2 Automatically Defined Functions
@@ -47,8 +36,7 @@
 // adf_1 -6
 // adf_2 -7
 
-char operators_string[7][10] = {"and", "or", "nand", "nor", "adf_0", "adf_1", "adf_2"};
-
+char operators_as_string[7][10] = {"and", "or", "nand", "nor", "adf_0", "adf_1", "adf_2"};
 // ---------------------------------------------------------------------------
 struct t_code3 {
 	int op; // either a variable or an operator
@@ -629,40 +617,43 @@ void print_chromosome(const t_mep_chromosome& a, const t_mep_parameters &params,
 	printf("\nADF 0:\n");
 	for (int i = 0; i < params.adf_code_length; i++)
 		if (a.adf_0[i].op < 0)
-			printf("%d: %s %d %d\n", i, operators_string[abs(a.adf_0[i].op) - 1], a.adf_0[i].addr1, a.adf_0[i].addr2);
+			printf("%d: %s %d %d\n", i, operators_as_string[abs(a.adf_0[i].op) - 1], a.adf_0[i].addr1, a.adf_0[i].addr2);
 		else
 			printf("%d: ADF inputs[%d]\n", i, a.adf_0[i].op);
 
 	printf("\nADF 1:\n");
 	for (int i = 0; i < params.adf_code_length; i++)
 		if (a.adf_1[i].op < 0)
-			printf("%d: %s %d %d\n", i, operators_string[abs(a.adf_1[i].op) - 1], a.adf_1[i].addr1, a.adf_1[i].addr2);
+			printf("%d: %s %d %d\n", i, operators_as_string[abs(a.adf_1[i].op) - 1], a.adf_1[i].addr1, a.adf_1[i].addr2);
 		else
 			printf("%d: ADF inputs[%d]\n", i, a.adf_1[i].op);
 
 	printf("\nADF 2:\n");
 	for (int i = 0; i < params.adf_code_length; i++)
 		if (a.adf_2[i].op < 0)
-			printf("%d: %s %d %d\n", i, operators_string[abs(a.adf_2[i].op) - 1], a.adf_2[i].addr1, a.adf_2[i].addr2);
+			printf("%d: %s %d %d\n", i, operators_as_string[abs(a.adf_2[i].op) - 1], a.adf_2[i].addr1, a.adf_2[i].addr2);
 		else
 			printf("%d: ADF inputs[%d]\n", i, a.adf_2[i].op);
 
 	printf("\nmain program:\n");
 		for (int i = 0; i < params.code_length; i++)
-		if (a.prg[i].op < 0)
-			if (a.prg[i].op >= -4) // binary operators
-					printf("%d: %s %d %d\n", i, operators_string[abs(a.prg[i].op) - 1], a.prg[i].addr1, a.prg[i].addr2);
-			else 
-				if (a.prg[i].op == -5) // ADF0
-				printf("%d: %s %d %d\n", i, operators_string[abs(a.prg[i].op) - 1], a.prg[i].addr1, a.prg[i].addr2);
-				else
-					if (a.prg[i].op == -6)// ADF 1
-						printf("%d: %s %d %d %d\n", i, operators_string[abs(a.prg[i].op) - 1], a.prg[i].addr1, a.prg[i].addr2, a.prg[i].addr3);
+			if (a.prg[i].op < 0){
+				if (a.prg[i].op >= -4){ // binary operators
+					printf("%d: %s %d %d\n", i, operators_as_string[abs(a.prg[i].op) - 1], a.prg[i].addr1, a.prg[i].addr2);
+				}
+				else{
+					if (a.prg[i].op == -5) // ADF0
+						printf("%d: %s %d %d\n", i, operators_as_string[abs(a.prg[i].op) - 1], a.prg[i].addr1, a.prg[i].addr2);
 					else
-						if (a.prg[i].op == -7) // ADF 2
-							printf("%d: %s %d %d %d %d\n", i, operators_string[abs(a.prg[i].op) - 1], a.prg[i].addr1, a.prg[i].addr2, a.prg[i].addr3, a.prg[i].addr4);
-		else
-			printf("%d: inputs[%d]\n", i, a.prg[i].op);
+						if (a.prg[i].op == -6)// ADF 1
+							printf("%d: %s %d %d %d\n", i, operators_as_string[abs(a.prg[i].op) - 1], a.prg[i].addr1, a.prg[i].addr2, a.prg[i].addr3);
+						else
+							if (a.prg[i].op == -7) // ADF 2
+								printf("%d: %s %d %d %d %d\n", i, operators_as_string[abs(a.prg[i].op) - 1], a.prg[i].addr1, a.prg[i].addr2, a.prg[i].addr3, a.prg[i].addr4);
+				}
+			}
+			else
+				printf("%d: inputs[%d]\n", i, a.prg[i].op);
 
 	printf("Best instruction index = %d\n", a.best_index);
 	printf("Fitness (best error) = %d\n", a.fitness);
@@ -679,10 +670,9 @@ int tournament_selection(const t_mep_chromosome *pop, int pop_size, int tourname
 	}
 	return p;
 }
-
 // ---------------------------------------------------------------------------
 void start_steady_state_mep(const t_mep_parameters &params, 
-			int **training_data, int* target, int num_training_data, int num_variables) // Steady-State
+			int **training_data, int* target, int num_training_data, int num_variables) 
 {
 	// a steady state approach:
 	// we work with 1 population
