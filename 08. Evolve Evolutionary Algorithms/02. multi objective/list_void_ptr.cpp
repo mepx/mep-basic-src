@@ -159,55 +159,6 @@ void* TLista::GetPrevInfo(node_double_linked* p)
 	return NULL;
 }
 // ---------------------------------------------------------------------------
-void* TLista::GetNextCircularInfo(node_double_linked* p)
-{
-	if (p){
-		if (!p->next)
-			return head->inf;
-		else
-			return p->next->inf;
-    }
-	return NULL;
-}
-
-// ---------------------------------------------------------------------------
-void* TLista::GetPrevCircularInfo(node_double_linked* p)
-{
-	if (p){
-		if (!p->prev)
-			return tail->inf;
-		else
-			return p->prev->inf;
-    }
-	return NULL;
-}
-
-// ---------------------------------------------------------------------------
-node_double_linked* TLista::delete_current_circular(node_double_linked* p)
-{
-	if (count > 1) {
-		// more elements
-		if (p == head)
-			head = head->next;
-		if (p == tail)
-			tail = tail->prev;
-
-		p->prev->next = p->next;
-		p->next->prev = p->prev;
-		delete p;
-		count--;
-		return head;
-	}
-	else {
-		// one element
-		delete p;
-		tail = NULL;
-		head = NULL;
-		count = 0;
-		return NULL;
-	}
-}
-// ---------------------------------------------------------------------------
 node_double_linked* TLista::DeleteCurrent(node_double_linked* p)
 {
 	if (count > 0)
