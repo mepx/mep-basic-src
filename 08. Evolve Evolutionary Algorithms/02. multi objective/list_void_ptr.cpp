@@ -199,13 +199,6 @@ node_double_linked* TLista::DeleteCurrent(node_double_linked* p)
 	else
 		return NULL;
 }
-
-// ---------------------------------------------------------------------------
-void TLista::Append(TLista & )
-{
-
-}
-
 // ---------------------------------------------------------------------------
 void TLista::Insert(long Index, void* data)
 {
@@ -277,35 +270,22 @@ void TLista::DeleteHead(void)
 }
 
 // ---------------------------------------------------------------------------
-	void* TLista::GetCurrentInfo(node_double_linked* p){
-		if (p)
-			return p->inf;
-		return 0;
-	}
-// ---------------------------------------------------------------------------
-	void* TLista::GetHeadInfo(void){
-		if (head)
-			return head->inf;
-		return 0;
-	}
-// ---------------------------------------------------------------------------
-	void* TLista::GetTailInfo(void)
-	{
-		if (tail)
-			return tail->inf;
-		return 0;
-	}
-	// ---------------------------------------------------------------------------
-	void AppendWithoutCopy(TLista &)
-{
-
+void* TLista::GetCurrentInfo(node_double_linked* p){
+	if (p)
+		return p->inf;
+	return 0;
 }
 // ---------------------------------------------------------------------------
-void TLista::make_circular(void)
+void* TLista::GetHeadInfo(void){
+	if (head)
+		return head->inf;
+	return 0;
+}
+// ---------------------------------------------------------------------------
+void* TLista::GetTailInfo(void)
 {
-	if (head) {
-		head->prev = tail;
-		tail->next = head;
-	}
+	if (tail)
+		return tail->inf;
+	return 0;
 }
 // ---------------------------------------------------------------------------

@@ -22,7 +22,6 @@ public:
 	node_double_linked* DeleteCurrent(node_double_linked*);
 	void* GetInfo(int);
 	node_double_linked* GetNode(int Index);
-	void Append(TLista & source);
 	void Insert(long, void*);
 	void Clear(void);
 	void DeleteHead(void);
