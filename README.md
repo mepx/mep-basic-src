@@ -12,7 +12,7 @@ There are multiple source codes in this repository:
 
 [mep_multi_class](04.%20Multi-class%20classification/) - MEP algorithm. Solves regression and multi-class classification problems.
 
-[mep_threads](05.%20Threads%20-%20Regression%20and%20classification/) - MEP with multiple (sub)populations evolved in different threads for regression and binary classification problems.
+[mep_threads](05.%20Threads%20-%20regression%20and%20binary%20classification/) - MEP with multiple (sub)populations evolved in different threads for regression and binary classification problems.
 
 [mep_circuits](06.%20Digital%20circuits%20(multipliers)/) - MEP for evolving digital circuits.
 
