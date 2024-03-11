@@ -14,10 +14,11 @@ There are multiple source codes in this repository:
 
 [mep_threads.cpp](05.%20Threads%20-%20Regression%20and%20classification/) - MEP with multiple (sub)populations evolved in different threads for regression and binary classification problems.
 
-[mep_circuits.cpp](06.%20Digital%20circuits%20design/) - MEP for evolving digital circuits.
+[mep_circuits.cpp](06.%20Digital%20circuits%20(multipliers)/) - MEP for evolving digital circuits.
 
 [mep_parity_adfs.cpp](07.%20Even%20parity/) - MEP algorithm with Automatically Defined Functions for Even-Parity problems.
 
+[mep_evolve_EAs](08.%20Evolve%20Evolutionary%20Algorithms/) - MEP for evolving Evolutionary Algorithms.
 ## How to run
 
 Take a _.cpp_ program from a folder and compile it.
