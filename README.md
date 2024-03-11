@@ -4,19 +4,19 @@
 
 There are multiple source codes in this repository:
 
-[mep_symbolic_regression.cpp](01.%20Symbolic%20regression/) - basic MEP algorithm. Solves symbolic regression and binary classification problems. This should be the starting point for everyone.
+[mep_symbolic_regression](01.%20Symbolic%20regression/) - basic MEP algorithm. Solves symbolic regression and binary classification problems. This should be the starting point for everyone.
 
-[mep_binary_classification.cpp](02.%20Binary%20classification/) - basic MEP algorithm. Solves symbolic regression and binary classification problems. This should be the starting point for everyone.
+[mep_binary_classification](02.%20Binary%20classification/) - basic MEP algorithm. Solves symbolic regression and binary classification problems. This should be the starting point for everyone.
 
-[mep_multiple_pop.cpp](03.%20Multiple%20populations%20-%20symbolic%20regression%20and%20binary%20classification/) - MEP with multiple (sub)populations for regression and binary classification problems.
+[mep_multiple_pop](03.%20Multiple%20populations%20-%20symbolic%20regression%20and%20binary%20classification/) - MEP with multiple (sub)populations for regression and binary classification problems.
 
-[mep_multi_class.cpp](04.%20Multi-class%20classification/) - MEP algorithm. Solves regression and multi-class classification problems.
+[mep_multi_class](04.%20Multi-class%20classification/) - MEP algorithm. Solves regression and multi-class classification problems.
 
-[mep_threads.cpp](05.%20Threads%20-%20Regression%20and%20classification/) - MEP with multiple (sub)populations evolved in different threads for regression and binary classification problems.
+[mep_threads](05.%20Threads%20-%20Regression%20and%20classification/) - MEP with multiple (sub)populations evolved in different threads for regression and binary classification problems.
 
-[mep_circuits.cpp](06.%20Digital%20circuits%20(multipliers)/) - MEP for evolving digital circuits.
+[mep_circuits](06.%20Digital%20circuits%20(multipliers)/) - MEP for evolving digital circuits.
 
-[mep_parity_adfs.cpp](07.%20Even%20parity/) - MEP algorithm with Automatically Defined Functions for Even-Parity problems.
+[mep_parity_adfs](07.%20Even%20parity%20(with%20ADFs)/) - MEP algorithm with Automatically Defined Functions for Even-Parity problems.
 
 [mep_evolve_EAs](08.%20Evolve%20Evolutionary%20Algorithms/) - MEP for evolving Evolutionary Algorithms.
 ## How to run
